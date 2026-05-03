@@ -26,7 +26,7 @@ export default function CenterPanel({ activeScenario, currentEvent, analysis, ev
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[2.3fr_1fr]">
-        <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-2xl p-6 xl:p-8 flex flex-col min-h-[400px]">
+        <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 xl:p-8 flex flex-col min-h-[400px]">
           <div className="flex items-center gap-3 mb-6">
             <Activity className="h-4 w-4 text-slate-400" />
             <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Anomaly Visualization</h3>

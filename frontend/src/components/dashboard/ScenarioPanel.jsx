@@ -6,7 +6,7 @@ import useSystemStore from "../../store/useSystemStore";
 
 export default function ScenarioPanel({ activeScenario, onTrigger }) {
   return (
-    <aside className="rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-2xl p-6 xl:p-8 flex flex-col">
+    <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 xl:p-8 flex flex-col">
       <PanelHeading icon={RadioTower} title="Command Line" subtitle="Inject telemetry" />
       <div className="mt-8 space-y-4 flex-1">
         {scenarios.map((scenario) => {

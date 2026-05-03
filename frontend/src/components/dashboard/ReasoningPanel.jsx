@@ -16,7 +16,7 @@ export default function ReasoningPanel({ analysis, isThinking, mode, backendOnli
   const escalated = analysis.escalated || false;
 
   return (
-    <aside className="rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-2xl p-6 xl:p-8 flex flex-col gap-5 overflow-y-auto">
+    <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 xl:p-8 flex flex-col gap-5 overflow-y-auto">
       <PanelHeading icon={ShieldAlert} title="AI Engine" subtitle={mode} />
 
       {/* Backend status pill */}

@@ -94,7 +94,7 @@ export default function Dashboard() {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      className="min-h-screen overflow-hidden bg-[#0B0F14] text-slate-100 font-sans selection:bg-emerald-500/30"
+      className="min-h-screen overflow-hidden bg-[#11151C] text-slate-100 font-sans selection:bg-emerald-500/30"
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(20,184,166,0.08),transparent_50%),radial-gradient(ellipse_at_top_right,rgba(15,23,42,0.5),transparent_50%)]" />
       

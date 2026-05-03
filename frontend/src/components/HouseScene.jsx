@@ -461,6 +461,55 @@ function CCTV() {
   );
 }
 
+function Lamppost({ position, isDaytime }) {
+  return (
+    <group position={position}>
+      {/* Base */}
+      <mesh position={[0, 0.1, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.15, 0.2, 0.2, 8]} />
+        <meshStandardMaterial color="#1e293b" />
+      </mesh>
+      {/* Post */}
+      <mesh position={[0, 1.2, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.05, 0.05, 2.4, 8]} />
+        <meshStandardMaterial color="#334155" />
+      </mesh>
+      {/* Horizontal Arm */}
+      <mesh position={[0.2, 2.4, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.4, 0.05, 0.05]} />
+        <meshStandardMaterial color="#334155" />
+      </mesh>
+      {/* Light Head */}
+      <group position={[0.4, 2.3, 0]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.2, 0.1, 0.2, 16]} />
+          <meshStandardMaterial color="#1e293b" />
+        </mesh>
+        {/* Glowy Bulb */}
+        <mesh position={[0, -0.05, 0]}>
+          <sphereGeometry args={[0.12, 16, 16]} />
+          <meshStandardMaterial 
+            color="#fbbf24" 
+            emissive="#fbbf24" 
+            emissiveIntensity={isDaytime ? 0 : 4} 
+          />
+        </mesh>
+        {/* Actual Point Light */}
+        {!isDaytime && (
+          <pointLight 
+            intensity={15} 
+            distance={15} 
+            color="#fbbf24" 
+            castShadow 
+            shadow-mapSize={[1024, 1024]}
+            shadow-bias={-0.0005}
+          />
+        )}
+      </group>
+    </group>
+  );
+}
+
 function MotionSensor({ triggered, scenario }) {
   let color = "#10b981"; // idle green
   if (triggered) {
@@ -683,18 +732,19 @@ function ScenarioSimulation() {
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color={isDaytime ? "#16a34a" : "#0f172a"} />
+        <meshStandardMaterial color={isDaytime ? "#16a34a" : "#1e293b"} />
       </mesh>
 
       <CCTV />
       <MotionSensor triggered={triggered} scenario={activeScenario} />
+      <Lamppost position={[-3, 0, -3.5]} isDaytime={isDaytime} />
       
       {getActor()}
       {activeScenario === 'delivery' && <DeliveryVan />}
       
       {/* Lights */}
-      <ambientLight intensity={isDaytime ? 1.0 : 0.2} color={isMorning ? "#FFDAB9" : "#ffffff"} />
-      <directionalLight position={[5, 10, -5]} intensity={isDaytime ? 2.5 : 1.5} castShadow={!isDaytime} color={isMorning ? "#FFDAB9" : "#ffffff"} />
+      <ambientLight intensity={isDaytime ? 1.0 : 0.4} color={isMorning ? "#FFDAB9" : "#ffffff"} />
+      <directionalLight position={[5, 10, -5]} intensity={isDaytime ? 2.5 : 2.0} castShadow={!isDaytime} color={isMorning ? "#FFDAB9" : "#ffffff"} />
       {isDaytime && <directionalLight position={[-5, 10, 5]} intensity={1.5} castShadow color={isMorning ? "#FFDAB9" : "#ffffff"} />}
       <pointLight 
         ref={lightRef}
@@ -708,7 +758,7 @@ export default function HouseScene() {
   const activeScenario = useSystemStore(state => state.activeScenario);
   const isDaytime = activeScenario === 'delivery' || activeScenario === 'return';
   const isMorning = activeScenario === 'return';
-  const bgColor = isMorning ? '#FFDAB9' : isDaytime ? '#87CEEB' : '#0B0F14';
+  const bgColor = isMorning ? '#FFDAB9' : isDaytime ? '#87CEEB' : '#11151C';
 
   return (
     <Canvas shadows camera={{ position: [6, 4, -7], fov: 45 }}>
