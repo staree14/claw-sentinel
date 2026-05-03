@@ -201,10 +201,10 @@ python stream_model.py
 This project was developed for the **Samsung PRISM** program to showcase the potential of AI-driven intelligence layers on top of existing smart home hardware ecosystems.
 
 ### The Team
-- **Member 1**: [Role / Name]
-- **Member 2**: [Role / Name]
-- **Member 3**: [Role / Name]
-- **Member 4**: [Role / Name]
+- **Member 1**: Sreeya Chand
+- **Member 2**: Prapti
+- **Member 3**: Aniksha Anithan
+- **Member 4**: Samyukthaa M
 
 ---
 
