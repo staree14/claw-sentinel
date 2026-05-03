@@ -85,6 +85,19 @@ The "Brain" of the system. An orchestration of specialized agents that reason ov
 - **Local-First Privacy:** Core intelligence runs locally to prevent IoT breach vulnerabilities.
 - **Interactive Control:** Secure two-way command and control via Telegram Bot API.
 
+## 📊 Model Training & Performance Dashboard
+
+Our anomaly detection model trains on historical data to build a highly accurate behavioral baseline, drastically reducing false positives.
+
+![Hourly Activity Heatmap](./docs/assets/heatmap.png)
+*Hourly activity heatmap showing the model clearly learning normal sensor windows, with darker bars indicating higher volume.*
+
+![Weekly Pattern](./docs/assets/weekly_pattern.png)
+*Weekly event patterns demonstrating tight weekday consistency versus more variable weekend behavior.*
+
+![False Alarm Suppression](./docs/assets/false_alarm_suppression.png)
+*Baseline learning in action: As ClawSentinel learns the home's routines, false alert rates drop sharply over time.*
+
 ---
 
 ## 🏠 Real-World Use Cases
@@ -95,26 +108,6 @@ The "Brain" of the system. An orchestration of specialized agents that reason ov
 | **The Mid-Day Delivery** | Front door activity at 2 PM. | **Suspicious, not Dangerous.** Matches typical window. Logs event silently. |
 | **The Nightly Pet** | Hallway motion at 1 AM. | **Normal.** Recognizes household pet baseline. Zero false alarm. |
 | **The Safe Return** | Door opens, user returns home. | **Authorized Entry.** Recognizes routine. Silently disarms and welcomes user. |
-
-### Visualizing the Intelligence Layer
-
-<div align="center">
-  <h4>Case 1: The Safe Return</h4>
-  <img src="./UserReturnsHome.png" alt="Safe Return" width="800">
-  <p><i>Recognizing a routine homecoming and adjusting security state without user intervention.</i></p>
-  
-  <br/>
-  
-  <h4>Case 2: The Mid-Day Delivery</h4>
-  <img src="./Delivery.png" alt="Delivery Scenario" width="800">
-  <p><i>Analyzing timing and occupancy to differentiate a courier from a threat.</i></p>
-
-  <br/>
-  
-  <h4>Case 3: The Nightly Pet</h4>
-  <img src="./PetDog.png" alt="Pet Detection" width="800">
-  <p><i>Filtering low-height movement baselines to eliminate false positives.</i></p>
-</div>
 
 ---
 
