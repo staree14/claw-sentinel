@@ -111,6 +111,27 @@ Our anomaly detection model trains on historical data to build a highly accurate
 
 ---
 
+### Visualizing the Intelligence Layer
+
+<div align="center">
+  <h4>Case 1: The Safe Return</h4>
+  <img src="./UserReturnsHome.png" alt="Safe Return" width="800">
+  <p><i>Recognizing a routine homecoming and adjusting security state without user intervention.</i></p>
+  
+  <br/>
+  
+  <h4>Case 2: The Mid-Day Delivery</h4>
+  <img src="./Delivery.png" alt="Delivery Scenario" width="800">
+  <p><i>Analyzing timing and occupancy to differentiate a courier from a threat.</i></p>
+
+  <br/>
+  
+  <h4>Case 3: The Nightly Pet</h4>
+  <img src="./PetDog.png" alt="Pet Detection" width="800">
+  <p><i>Filtering low-height movement baselines to eliminate false positives.</i></p>
+</div>
+
+
 ## 🛠 Tech Stack
 
 ### 1. AI & Machine Learning Layer
