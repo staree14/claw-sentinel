@@ -1,5 +1,5 @@
 import React from "react";
-import { Bot, Clock3, Sparkles } from "lucide-react";
+import { Bot, Clock3 } from "lucide-react";
 import PanelHeading from "../ui/PanelHeading";
 import RiskBadge from "../ui/RiskBadge";
 import EventCard from "./EventCard";
@@ -22,32 +22,7 @@ export default function CenterPanel({ currentEvent, analysis, eventLog, timeline
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1fr_0.95fr]">
-        <div className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl">
-          <PanelHeading icon={Sparkles} title="Anomaly Visualization" subtitle="Context-weighted risk profile" />
-          <div className="mt-6 grid grid-cols-12 items-end gap-2 rounded-lg border border-white/10 bg-slate-950/45 p-4">
-            {Array.from({ length: 24 }).map((_, index) => {
-              const hour = index;
-              const activeHour = currentEvent ? Number(currentEvent.time.split(":")[0]) : -1;
-              const height = 18 + ((index * 17) % 56);
-              const isActive = hour === activeHour;
-              return (
-                <div key={hour} className="col-span-1 flex min-h-44 flex-col justify-end gap-2">
-                  <div
-                    className={`rounded-t transition-all duration-500 ${
-                      isActive ? "bg-teal-200 shadow-glow" : "bg-slate-700/70"
-                    }`}
-                    style={{ height: `${isActive ? Math.max(height, 88) : height}px` }}
-                  />
-                  <span className="hidden text-center text-[10px] text-slate-500 sm:block">
-                    {hour % 6 === 0 ? `${String(hour).padStart(2, "0")}` : ""}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
+      <div className="grid gap-4">
         <div className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl">
           <PanelHeading icon={Clock3} title="Timeline" subtitle="Recent sensor decisions" />
           <div className="mt-6 space-y-3">
