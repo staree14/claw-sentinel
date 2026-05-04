@@ -9,7 +9,8 @@
 
 > **"Every existing system tells you what happened. ClawSentinel tells you if it matters. It is the first system that knows the difference between your cat and a criminal."**
 
-DEMO LINK: 
+DEMO LINK: https://youtu.be/_dhuv23u6BU
+----
 PRESENTATION LINK: https://canva.link/fzn91jknohnwxxy
 
 ---
