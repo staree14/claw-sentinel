@@ -1,14 +1,15 @@
 import React from "react";
-import { Bot, Clock3 } from "lucide-react";
+import { Bot, Clock3, Activity } from "lucide-react";
 import PanelHeading from "../ui/PanelHeading";
 import RiskBadge from "../ui/RiskBadge";
 import EventCard from "./EventCard";
 import AnomalyScore from "./AnomalyScore";
 import EmptyState from "../ui/EmptyState";
 import EventLog from "./EventLog";
+import IntrusionScene from "./IntrusionScene";
 import { dotColor } from "../../lib/utils";
 
-export default function CenterPanel({ currentEvent, analysis, eventLog, timeline, isThinking }) {
+export default function CenterPanel({ activeScenario, currentEvent, analysis, eventLog, timeline, isThinking }) {
   return (
     <section className="grid min-h-[680px] grid-rows-[auto_1fr_auto] gap-4">
       <div className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl">
@@ -22,10 +23,23 @@ export default function CenterPanel({ currentEvent, analysis, eventLog, timeline
         </div>
       </div>
 
-      <div className="grid gap-4">
-        <div className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl">
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl flex flex-col">
+          <PanelHeading icon={Activity} title="Anomaly Visualization" subtitle="Context-weighted risk profile" />
+          <div className="mt-6 flex-1 min-h-[220px]">
+            {activeScenario === 'intrusion' ? (
+              <IntrusionScene />
+            ) : (
+              <div className="flex h-full items-center justify-center rounded-lg border border-white/10 bg-slate-950/35">
+                <p className="text-sm text-slate-500">Awaiting visual context</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-white/10 bg-white/[0.055] p-5 backdrop-blur-xl flex flex-col">
           <PanelHeading icon={Clock3} title="Timeline" subtitle="Recent sensor decisions" />
-          <div className="mt-6 space-y-3">
+          <div className="mt-6 space-y-3 flex-1">
             {timeline.length === 0 ? (
               <EmptyState text="No scenarios have been triggered yet." />
             ) : (

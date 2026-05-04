@@ -49,6 +49,7 @@ export default function App() {
         <section className="grid flex-1 grid-cols-1 gap-4 px-4 pb-4 lg:grid-cols-[310px_minmax(0,1fr)_360px]">
           <ScenarioPanel activeScenario={activeScenario} onTrigger={triggerScenario} />
           <CenterPanel
+            activeScenario={activeScenario}
             currentEvent={currentEvent}
             analysis={analysis}
             eventLog={eventLog}
