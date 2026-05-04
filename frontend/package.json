@@ -12,9 +12,11 @@
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@vitejs/plugin-react": "latest",
+    "framer-motion": "^12.38.0",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-router-dom": "^7.14.2",
     "three": "^0.184.0",
     "vite": "latest"
   },
