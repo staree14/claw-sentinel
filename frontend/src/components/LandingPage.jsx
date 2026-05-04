@@ -1,9 +1,17 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
-export default function LandingPage({ onEnter }) {
+export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
-    <div className="relative min-h-screen bg-[#0B0F14] flex flex-col items-center justify-center overflow-hidden">
+    <motion.div 
+      key="landing"
+      exit={{ opacity: 0, scale: 0.95, filter: "blur(10px)" }} 
+      transition={{ duration: 0.5 }}
+      className="relative min-h-screen bg-[#0B0F14] flex flex-col items-center justify-center overflow-hidden"
+    >
       {/* Ambient background glows */}
       <div className="absolute top-[20%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[20%] left-1/2 -translate-x-1/2 translate-y-1/2 w-[600px] h-[400px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none" />
@@ -51,7 +59,7 @@ export default function LandingPage({ onEnter }) {
         </motion.div>
 
         <motion.button
-          onClick={onEnter}
+          onClick={() => navigate("/dashboard")}
           className="mt-14 group relative px-8 py-4 rounded-full bg-white text-slate-950 font-medium tracking-wide overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(20,184,166,0.3)]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -66,6 +74,6 @@ export default function LandingPage({ onEnter }) {
           </span>
         </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 }
