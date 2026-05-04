@@ -18,9 +18,9 @@ export default function ActionButton({ action, disabled }) {
   return (
     <button
       disabled={disabled}
-      className="flex h-11 items-center gap-3 rounded-lg border border-white/10 bg-white/7 px-3 text-left text-sm text-slate-200 transition hover:border-teal-200/35 hover:bg-teal-300/10 disabled:cursor-not-allowed disabled:opacity-55"
+      className="group flex h-12 items-center gap-4 rounded-xl border border-white/5 bg-white/[0.02] px-4 text-left text-[13px] font-medium tracking-wide text-slate-300 transition-all duration-300 hover:border-emerald-400/30 hover:bg-emerald-400/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
     >
-      <Icon className="h-4 w-4 text-teal-100" />
+      <Icon className="h-4 w-4 text-slate-500 transition-colors duration-300 group-hover:text-emerald-400" />
       {action}
     </button>
   );
