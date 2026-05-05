@@ -43,7 +43,7 @@ export default function LandingPage() {
           transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           {/* Subtle grid pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]" />
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
 
           <div className="relative flex flex-col items-center gap-5">
             <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500 shadow-glow">
@@ -53,7 +53,7 @@ export default function LandingPage() {
             </div>
             <div className="text-center">
               <p className="text-sm tracking-[0.25em] uppercase text-slate-300 font-semibold">Interactive 3D Demo</p>
-              <p className="text-sm text-slate-500 mt-2 font-light">Visualizer module pending integration</p>
+              <p className="text-sm text-slate-500 mt-2 font-light">Visualizer moved to dashboard</p>
             </div>
           </div>
         </motion.div>

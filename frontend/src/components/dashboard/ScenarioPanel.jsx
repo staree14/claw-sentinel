@@ -1,7 +1,8 @@
 import React from "react";
-import { RadioTower } from "lucide-react";
+import { RadioTower, RefreshCw } from "lucide-react";
 import PanelHeading from "../ui/PanelHeading";
 import { scenarios } from "../../lib/constants";
+import useSystemStore from "../../store/useSystemStore";
 
 export default function ScenarioPanel({ activeScenario, onTrigger }) {
   return (
@@ -35,6 +36,15 @@ export default function ScenarioPanel({ activeScenario, onTrigger }) {
             </button>
           );
         })}
+      </div>
+      <div className="mt-6 pt-6 border-t border-white/5">
+        <button
+          onClick={() => useSystemStore.getState().resetSystem()}
+          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-rose-500/30 bg-rose-500/5 text-rose-400 hover:bg-rose-500/20 transition-colors text-sm font-medium tracking-wide uppercase"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Reset Simulation
+        </button>
       </div>
     </aside>
   );

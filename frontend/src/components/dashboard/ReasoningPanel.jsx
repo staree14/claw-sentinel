@@ -105,7 +105,7 @@ export default function ReasoningPanel({ analysis, isThinking, mode, backendOnli
       </div>
 
       {/* Agent Trace Log (real backend only) */}
-      {trace.length > 0 && !isThinking && (
+      {trace.length > 0 && (
         <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5">
           <div className="flex items-center gap-2 mb-3">
             <Terminal className="h-3.5 w-3.5 text-slate-500" />

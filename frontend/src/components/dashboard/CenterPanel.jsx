@@ -4,8 +4,8 @@ import RiskBadge from "../ui/RiskBadge";
 import EventCard from "./EventCard";
 import AnomalyScore from "./AnomalyScore";
 import EventLog from "./EventLog";
-import IntrusionScene from "./IntrusionScene";
 import { dotColor } from "../../lib/utils";
+import HouseScene from "../HouseScene";
 
 export default function CenterPanel({ activeScenario, currentEvent, analysis, eventLog, timeline, isThinking }) {
   return (
@@ -31,14 +31,8 @@ export default function CenterPanel({ activeScenario, currentEvent, analysis, ev
             <Activity className="h-4 w-4 text-slate-400" />
             <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Anomaly Visualization</h3>
           </div>
-          <div className="flex-1 min-h-[220px]">
-            {activeScenario === 'intrusion' ? (
-              <IntrusionScene />
-            ) : (
-              <div className="flex h-full min-h-[220px] items-center justify-center rounded-lg border border-white/10 bg-slate-950/35">
-                <p className="text-sm font-light text-slate-500 tracking-wide">Awaiting visual context</p>
-              </div>
-            )}
+          <div className="flex-1 min-h-[220px] rounded-lg overflow-hidden relative">
+            <HouseScene />
           </div>
         </div>
 
