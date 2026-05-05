@@ -1,0 +1,143 @@
+"""
+API Routes — ClawSentinel Endpoints
+=====================================
+POST /event  → Run full 5-agent pipeline
+GET  /state  → Return current memory snapshot
+GET  /trace  → Return last N decision traces
+GET  /health → Health check
+"""
+
+import logging
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException, Query, Request
+
+from models.schemas import EventInput, PipelineResponse, StateResponse, TraceResponse, ActionInput
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
+
+def get_orchestrator(request: Request):
+    """Retrieve the shared Orchestrator instance from app state."""
+    return request.app.state.orchestrator
+
+
+# ──────────────────────────────────────────────────────────────
+# POST /event
+# ──────────────────────────────────────────────────────────────
+
+@router.post(
+    "/event",
+    response_model=PipelineResponse,
+    summary="Submit sensor event to the pipeline",
+    description=(
+        "Runs the full 5-agent pipeline: "
+        "SensorAgent → ContextAgent → RiskAgent → DecisionAgent → ActionAgent. "
+        "Returns anomaly score, risk level, decision, reasoning, and full trace."
+    ),
+)
+async def submit_event(payload: EventInput, request: Request) -> PipelineResponse:
+    """
+    Trigger the ClawSentinel pipeline for an incoming sensor event.
+
+    The pipeline:
+    1. Normalizes the raw event (SensorAgent)
+    2. Retrieves behavioral context (ContextAgent)
+    3. Computes anomaly score via IsolationForest (RiskAgent)
+    4. Generates LLM reasoning and decision via Gemini (DecisionAgent)
+    5. Executes actions and sends Telegram alert if needed (ActionAgent)
+    """
+    orchestrator = get_orchestrator(request)
+    try:
+        result = await orchestrator.run(payload.model_dump())
+        return PipelineResponse(**result)
+    except Exception as e:
+        logger.error(f"[Routes /event] Pipeline error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Pipeline failed: {str(e)}")
+
+
+# ──────────────────────────────────────────────────────────────
+# GET /state
+# ──────────────────────────────────────────────────────────────
+
+@router.get(
+    "/state",
+    response_model=StateResponse,
+    summary="Retrieve current memory state",
+    description=(
+        "Returns the current contents of SOUL.md (long-term baseline), "
+        "recent event count, and last N decisions from HEARTBEAT.md."
+    ),
+)
+async def get_state(request: Request) -> StateResponse:
+    """Return the agent memory snapshot."""
+    orchestrator = get_orchestrator(request)
+    try:
+        state = orchestrator.get_state()
+        return StateResponse(**state)
+    except Exception as e:
+        logger.error(f"[Routes /state] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ──────────────────────────────────────────────────────────────
+# GET /trace
+# ──────────────────────────────────────────────────────────────
+
+@router.get(
+    "/trace",
+    response_model=TraceResponse,
+    summary="Retrieve last N decision traces",
+    description=(
+        "Returns the last N full pipeline traces for the dashboard timeline. "
+        "Each trace contains the event, risk scores, decision, and step-by-step agent log."
+    ),
+)
+async def get_trace(
+    request: Request,
+    n: int = Query(default=10, ge=1, le=50, description="Number of traces to return"),
+) -> TraceResponse:
+    """Return rolling history of pipeline executions."""
+    orchestrator = get_orchestrator(request)
+    try:
+        traces = orchestrator.get_traces(n)
+        return TraceResponse(**traces)
+    except Exception as e:
+        logger.error(f"[Routes /trace] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/action",
+    summary="Confirm and execute a physical action",
+    description="Explicitly triggers a physical action (like locking a door) that requires human-in-the-loop confirmation.",
+)
+async def execute_action(payload: ActionInput, request: Request):
+    """Execute a confirmed action."""
+    orchestrator = get_orchestrator(request)
+    try:
+        result = await orchestrator.execute_action(payload.action)
+        return result
+    except Exception as e:
+        logger.error(f"[Routes /action] Error: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ──────────────────────────────────────────────────────────────
+# GET /health
+# ──────────────────────────────────────────────────────────────
+
+@router.get("/health", summary="Health check")
+async def health_check(request: Request):
+    """Quick liveness probe."""
+    orchestrator = get_orchestrator(request)
+    state = orchestrator.get_state()
+    return {
+        "status": "online",
+        "system": "ClawSentinel",
+        "pipeline": "5-agent MAS",
+        "memory_status": state.get("system_status", "unknown"),
+        "events_in_memory": state.get("recent_events_count", 0),
+    }

@@ -33,11 +33,12 @@ export default function EventCard({ currentEvent, isThinking }) {
             className="flex-1 flex flex-col justify-between"
           >
             <div className="grid grid-cols-2 gap-4">
-              <TelemetryMetric label="Time" value={currentEvent.time} />
-              <TelemetryMetric label="Event" value={currentEvent.event.replace("_", " ")} />
+              <TelemetryMetric label="Time" value={currentEvent.time || "--:--"} />
+              <TelemetryMetric label="Event" value={(currentEvent.event || "unknown").replace("_", " ")} />
               <TelemetryMetric label="Occupancy" value={currentEvent.user_home ? "Home" : "Away"} />
               <TelemetryMetric label="Motion" value={currentEvent.motion ? "Detected" : "Clear"} />
             </div>
+
             
             <div className="mt-6 pt-6 border-t border-white/5">
               <p className="text-sm tracking-[0.2em] uppercase text-slate-500 font-semibold mb-3">Context</p>

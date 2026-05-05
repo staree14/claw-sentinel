@@ -55,15 +55,18 @@ export default function CenterPanel({ activeScenario, currentEvent, analysis, ev
               </div>
             ) : (
               timeline.slice(0, 4).map(({ event, analysis: itemAnalysis }) => (
-                <div key={event.id} className="flex items-center gap-4 group">
+                <div key={event.id || Math.random()} className="flex items-center gap-4 group">
                   <div className={`h-2.5 w-2.5 rounded-full ${dotColor(itemAnalysis.riskLevel)} group-hover:scale-125 transition-transform`} />
                   <div className="h-px flex-1 bg-gradient-to-r from-white/5 to-transparent" />
-                  <span className="text-sm font-medium text-slate-300 min-w-[140px] truncate">{event.scenario}</span>
+                  <span className="text-sm font-medium text-slate-300 min-w-[140px] truncate">
+                    {event.scenario || (event.event ? event.event.replace("_", " ") : "Unknown Event")}
+                  </span>
                   <span className="w-16 text-right text-xs uppercase tracking-widest text-slate-500">{event.time}</span>
                 </div>
               ))
             )}
           </div>
+
         </div>
       </div>
     </section>
