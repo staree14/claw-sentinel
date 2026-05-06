@@ -9,6 +9,13 @@ function appendTrace(message) {
   store.setSystemState({ trace: [...store.trace, message] });
 }
 
+function showNotification(message, type = "success") {
+  const store = useSystemStore.getState();
+  store.setSystemState({ 
+    notification: { message, type, id: Date.now() } 
+  });
+}
+
 export async function processEvent(eventPayload) {
   const store = useSystemStore.getState();
   const event = { ...eventPayload, id: eventPayload.id || crypto.randomUUID() };
@@ -25,7 +32,10 @@ export async function processEvent(eventPayload) {
     trace: ['Sensor event received'],
   });
 
-  await delay(500);
+  // Skip delay if legacy
+  if (store.mode !== "Legacy System") {
+    await delay(800); // Increased AI prep delay
+  }
 
   let analysis;
   
@@ -43,16 +53,21 @@ export async function processEvent(eventPayload) {
     }
   } else {
     // Local heuristic
-    appendTrace('Evaluating context locally...');
-    await delay(300);
-    
-    appendTrace('Checking user presence...');
-    await delay(300);
-    
-    analysis = evaluateEvent(event, store.mode);
-    
-    appendTrace('Risk computed');
-    await delay(300);
+    if (store.mode === "Legacy System") {
+      analysis = evaluateEvent(event, store.mode);
+      appendTrace('Legacy rule matched');
+    } else {
+      appendTrace('Evaluating context locally...');
+      await delay(600);
+      
+      appendTrace('Checking user presence...');
+      await delay(600);
+      
+      analysis = evaluateEvent(event, store.mode);
+      
+      appendTrace('Risk computed');
+      await delay(600);
+    }
   }
 
   // Generate decision
@@ -60,8 +75,12 @@ export async function processEvent(eventPayload) {
     : analysis.riskLevel === "Suspicious" ? "MONITOR" : "IGNORE";
   
   appendTrace(`Decision: ${decision}`);
-  await delay(300);
+  
+  if (store.mode !== "Legacy System") {
+    await delay(600);
+  }
 
+  // Action triggered message is already appended
   appendTrace('Action triggered');
 
   // Update store with final analysis
@@ -69,12 +88,13 @@ export async function processEvent(eventPayload) {
     anomalyScore: analysis.anomalyScore,
     riskLevel: analysis.riskLevel,
     reasoning: analysis.reasoning,
-    actionTaken: analysis.actionTaken,
+    actionTaken: store.mode === "Legacy System" ? "None (Reactive systems cannot take context-aware actions)" : analysis.actionTaken,
     suggestedActions: analysis.suggestedActions || [],
   });
 
-  // Automatically execute action if dangerous and backend is online
-  if (decision === "ALERT" && store.backendOnline) {
-     executeAction("Alert user", event.id).catch(err => console.error(err));
+  // Show notification for UI feedback, but don't call executeAction again
+  // because the backend ActionAgent already sent the Telegram alert during the pipeline.
+  if (decision === "ALERT") {
+     showNotification("🚨 ALERT SENT ON TELEGRAM", "danger");
   }
 }

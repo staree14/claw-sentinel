@@ -93,7 +93,11 @@ class RiskAgent:
             raw_score = float(self.model.decision_function(feature_array)[0])
 
             # Normalize to [0.05, 0.98]: higher = more dangerous
-            anomaly_score = max(0.05, min(0.98, 0.5 - raw_score * 3.0))
+            # Intensified scaling: if raw_score <= 0 (dangerous), boost it to 0.90+ immediately
+            if raw_score <= 0:
+                anomaly_score = max(0.92, min(0.98, 0.98 + raw_score * 0.5))
+            else:
+                anomaly_score = max(0.05, min(0.85, 0.5 - raw_score * 3.0))
 
             risk_level = self._classify_raw(raw_score)
             z_score = self._compute_z_score(event)

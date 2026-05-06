@@ -12,6 +12,7 @@ const useSystemStore = create((set) => ({
   mode: 'ClawSentinel AI',
   activeScenario: null,
   backendOnline: false,
+  notification: null,
 
   setSystemState: (stateUpdate) => set((state) => ({ ...state, ...stateUpdate })),
 

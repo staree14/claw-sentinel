@@ -12,7 +12,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from models.schemas import EventInput, PipelineResponse, StateResponse, TraceResponse, ActionInput
+from models.schemas import EventInput, PipelineResponse, StateResponse, TraceResponse, ActionInput, TelegramWebhook
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +123,67 @@ async def execute_action(payload: ActionInput, request: Request):
     except Exception as e:
         logger.error(f"[Routes /action] Error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post(
+    "/telegram/webhook",
+    summary="Handle Telegram callbacks",
+    description="Processes button clicks from the Telegram alert message.",
+)
+async def telegram_webhook(payload: dict, request: Request):
+    """Handle incoming Telegram callback queries."""
+    orchestrator = get_orchestrator(request)
+    try:
+        # Simple extraction for demo purposes
+        # In production, use python-telegram-bot's Update.de_json
+        # Handle button clicks (Legacy Inline buttons or manual callbacks)
+        if "callback_query" in payload:
+            cb = payload["callback_query"]
+            cb_id = cb.get("id")
+            action = cb.get("data")
+            user = cb.get("from", {}).get("username", "User")
+            
+            logger.info(f"[Telegram Webhook] Callback '{action}' triggered by @{user}")
+            
+            # Execute the action
+            result = await orchestrator.execute_action(action)
+            
+            # Answer callback query
+            try:
+                bot = orchestrator.action_agent._bot
+                if bot and cb_id:
+                    await bot.answer_callback_query(callback_query_id=cb_id)
+            except Exception: pass
+
+            return {"status": "ok", "action": action, "user": user}
+
+        # Handle text messages (from ReplyKeyboardMarkup or manual typing)
+        elif "message" in payload:
+            msg = payload["message"]
+            text = msg.get("text", "")
+            user = msg.get("from", {}).get("username", "User")
+
+            logger.info(f"[Telegram Webhook] Text received: '{text}' from @{user}")
+
+            # Map common text phrases to actions (case-insensitive)
+            normalized_text = text.lower()
+            action = None
+            if "lock" in normalized_text:     action = "lock_door"
+            elif "off" in normalized_text:    action = "off_device"
+            elif "record" in normalized_text: action = "start_recording"
+            elif "dismiss" in normalized_text: action = "dismiss"
+
+            if action:
+                logger.info(f"[Telegram Webhook] Mapped text '{text}' to action '{action}'")
+                result = await orchestrator.execute_action(action)
+                return {"status": "ok", "action": action, "user": user}
+            else:
+                logger.warning(f"[Telegram Webhook] No action mapped for text: '{text}'")
+            
+        return {"status": "ignored"}
+    except Exception as e:
+        logger.error(f"[Telegram Webhook] Error: {e}", exc_info=True)
+        return {"status": "error", "detail": str(e)}
 
 
 # ──────────────────────────────────────────────────────────────

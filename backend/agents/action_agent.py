@@ -16,7 +16,7 @@ import logging
 import os
 from datetime import datetime
 
-from telegram import Bot
+from telegram import Bot, ReplyKeyboardMarkup, KeyboardButton
 from telegram.error import TelegramError
 
 logger = logging.getLogger(__name__)
@@ -71,21 +71,39 @@ class ActionAgent:
         """
         logger.info(f"[ActionAgent] Executing CONFIRMED action: {action_name}")
         
+        # Human-friendly mapping for buttons
+        # Normalize keys to lowercase and snake_case for robust matching
+        msg_map = {
+            "lock_door": "🔒 *Action Executed*: Door Locked. You are now secure.",
+            "off_device": "🔌 *Action Executed*: Device Powered Off.",
+            "start_recording": "📹 *Action Executed*: Recording Started.",
+            "dismiss": "✅ *Action Executed*: Alert Dismissed.",
+            "alert_user": "✅ *Action Executed*: User Alerted (Confirmed via Dashboard)"
+        }
+        
+        # Normalize input: "Lock door" -> "lock_door"
+        key = action_name.lower().replace(" ", "_")
+        display_name = msg_map.get(key, f"Action Executed: {action_name}")
+
         # Simulate real hardware interaction
         if self._telegram_ready:
             try:
+                logger.info(f"[ActionAgent] Sending Telegram confirmation: {display_name}")
                 await self._bot.send_message(
                     chat_id=TELEGRAM_CHAT_ID,
-                    text=f"✅ *Action Executed*: `{action_name}`\n_Confirmed via System Terminal_",
+                    text=display_name,
                     parse_mode="Markdown"
                 )
+                logger.info("[ActionAgent] Telegram confirmation sent successfully")
             except Exception as e:
                 logger.error(f"Failed to send confirmation to Telegram: {e}")
+        else:
+            logger.warning("[ActionAgent] Telegram not ready — confirmation skipped")
 
         return {
             "status": "success",
             "action": action_name,
-            "message": f"Successfully executed physical action: {action_name}"
+            "message": display_name
         }
 
     # ──────────────────────────────────────────
@@ -104,10 +122,23 @@ class ActionAgent:
         # Send real Telegram notification
         if self._telegram_ready:
             try:
+                # Use ReplyKeyboardMarkup for "2-way convo" feel
+                # Clicking these sends the text as a message FROM the user
+                keyboard = [
+                    [KeyboardButton("🔒 Lock Door"), KeyboardButton("🔇 Off Device")],
+                    [KeyboardButton("📹 Start Recording"), KeyboardButton("✅ Dismiss")]
+                ]
+                reply_markup = ReplyKeyboardMarkup(
+                    keyboard, 
+                    one_time_keyboard=True, 
+                    resize_keyboard=True
+                )
+
                 await self._bot.send_message(
                     chat_id=TELEGRAM_CHAT_ID,
                     text=message,
-                    parse_mode="Markdown"
+                    parse_mode="Markdown",
+                    reply_markup=reply_markup
                 )
                 logger.info(f"[ActionAgent] ✅ Telegram alert sent to {TELEGRAM_CHAT_ID}")
                 actions.append("telegram_delivered")
@@ -140,14 +171,13 @@ class ActionAgent:
         risk_level = risk.get("risk_level", "Dangerous")
         emoji = "🚨" if risk_level == "Dangerous" else "⚠️"
 
+        # Simplified message as per user request (reasoning is on dashboard)
         return (
             f"{emoji} *CLAWSENTINEL ALERT*\n\n"
             f"*Risk*: {risk_level} (score: {score:.2f})\n"
-            f"*Event*: `{event.get('event')}` at {event.get('time')}\n"
-            f"*Source*: {event.get('source')}\n"
-            f"*User Home*: {event.get('user_home')}\n\n"
-            f"*Reasoning*:\n{reasoning[:300]}\n\n"
-            f"_Reply LOCK to lock door | IGNORE to dismiss_\n"
+            f"*Event*: `{event.get('event')}`\n"
+            f"*Source*: `{event.get('source')}`\n\n"
+            f"_Select an action below to respond._\n"
             f"_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}_"
         )
 

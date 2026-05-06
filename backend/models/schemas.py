@@ -61,3 +61,9 @@ class ActionInput(BaseModel):
     action: str = Field(..., example="Lock door")
     event_id: Optional[str] = None
 
+
+class TelegramWebhook(BaseModel):
+    # Flexible schema for raw Telegram updates
+    update_id: int
+    callback_query: Optional[dict] = None
+    message: Optional[dict] = None
