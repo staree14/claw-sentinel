@@ -35,3 +35,11 @@
 - **Decision**: `MONITOR`
 - **Reasoning**: Unusual activity: door_open at 18:10 (hour=18). Anomaly score 0.39 is elevated but not critical. Pattern partially matches baseline — elevated monitoring recommended.
 ---
+
+## [2026-05-06 23:09:20]
+- **Event**: `doorbell` @ 14:00
+- **Source**: porch_camera
+- **User Home**: False
+- **Decision**: `IGNORE`
+- **Reasoning**: Event doorbell at 14:00 matches expected household routine. Anomaly score 0.32 is within normal range. User presence and timing are consistent with 90-day behavioral baseline.
+---

@@ -15,6 +15,18 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
   const leftArm = useRef();
   const rightArm = useRef();
   const body = useRef();
+  
+  const stateRef = useRef({ phase: 'walking_to_door', waitTime: 0 });
+  const packageRef = useRef();
+
+  useEffect(() => {
+    stateRef.current = { phase: 'walking_to_door', waitTime: 0 };
+    if (group.current) {
+      group.current.rotation.y = 0;
+      group.current.rotation.x = 0;
+      group.current.position.y = 0;
+    }
+  }, [scenario]);
 
   useFrame((state, delta) => {
     if (!group.current) return;
@@ -49,8 +61,48 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
       } else {
         moving = false;
       }
+    } else if (scenario === 'delivery') {
+      const st = stateRef.current;
+      if (!st.phase) st.phase = 'walking_to_door';
+      
+      if (st.phase === 'walking_to_door') {
+        if (z < 1.0) {
+          const walkSpeed = 1.5;
+          group.current.position.z += walkSpeed * delta;
+          group.current.position.y = 0;
+          group.current.rotation.y = 0;
+          limbSwing = 0.4;
+          // hold package
+          if (leftArm.current) leftArm.current.rotation.x = -Math.PI / 4;
+          if (rightArm.current) rightArm.current.rotation.x = -Math.PI / 4;
+        } else {
+          st.phase = 'dropping';
+          st.waitTime = 0;
+        }
+      } else if (st.phase === 'dropping') {
+        st.waitTime += delta;
+        moving = false;
+        // bend down slightly
+        group.current.position.y = -Math.sin(Math.min(st.waitTime, 1) * Math.PI) * 0.2; 
+        if (st.waitTime > 1.0) {
+          st.phase = 'walking_back';
+          group.current.rotation.y = Math.PI; // turn around
+        }
+      } else if (st.phase === 'walking_back') {
+        if (z > -6) {
+          const walkSpeed = 1.5;
+          group.current.position.z -= walkSpeed * delta;
+          group.current.position.y = 0;
+        } else {
+          moving = false;
+        }
+      }
+      
+      if (packageRef.current) {
+        packageRef.current.visible = st.phase !== 'walking_back';
+      }
     } else {
-      // Delivery or Return: Walk straight through the gap
+      // Return: Walk straight through the gap
       if (z < 1.3) {
         const walkSpeed = Math.max(0.5, (1.3 - z) * 1.5);
         group.current.position.z += walkSpeed * delta;
@@ -63,15 +115,19 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
     if (moving) {
       if (leftLeg.current) leftLeg.current.rotation.x = Math.sin(t * speed * 3) * limbSwing;
       if (rightLeg.current) rightLeg.current.rotation.x = -Math.sin(t * speed * 3) * limbSwing;
-      if (leftArm.current) leftArm.current.rotation.x = -Math.sin(t * speed * 3) * limbSwing;
-      if (rightArm.current) rightArm.current.rotation.x = Math.sin(t * speed * 3) * limbSwing;
+      if (scenario !== 'delivery' || stateRef.current?.phase === 'walking_back') {
+        if (leftArm.current) leftArm.current.rotation.x = -Math.sin(t * speed * 3) * limbSwing;
+        if (rightArm.current) rightArm.current.rotation.x = Math.sin(t * speed * 3) * limbSwing;
+      }
       if (body.current) body.current.position.y = 0.6 + Math.abs(Math.sin(t * speed * 3)) * 0.1;
     } else {
       if (leftLeg.current) leftLeg.current.rotation.x = 0;
       if (rightLeg.current) rightLeg.current.rotation.x = 0;
-      if (leftArm.current) leftArm.current.rotation.x = 0;
-      if (rightArm.current) rightArm.current.rotation.x = 0;
-      if (body.current) body.current.position.y = 0.6;
+      if (scenario !== 'delivery' || stateRef.current?.phase === 'walking_back') {
+        if (leftArm.current) leftArm.current.rotation.x = 0;
+        if (rightArm.current) rightArm.current.rotation.x = 0;
+      }
+      if (body.current && scenario !== 'delivery') body.current.position.y = 0.6;
     }
   });
 
@@ -86,6 +142,12 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
           <boxGeometry args={[0.4, 0.6, 0.2]} />
           <meshStandardMaterial color={color.body} />
         </mesh>
+        {scenario === 'delivery' && (
+          <mesh ref={packageRef} position={[0, 0.1, 0.25]} castShadow>
+            <boxGeometry args={[0.3, 0.25, 0.3]} />
+            <meshStandardMaterial color="#8b5cf6" />
+          </mesh>
+        )}
         <group ref={leftArm} position={[-0.3, 0.3, 0]}>
           <mesh position={[0, -0.2, 0]} castShadow>
             <boxGeometry args={[0.1, 0.5, 0.1]} />
@@ -144,6 +206,45 @@ const Pet = forwardRef(({ position, ...props }, ref) => {
     </group>
   );
 });
+
+function DeliveryVan() {
+  return (
+    <group position={[0, 0.75, -5.5]} rotation={[0, Math.PI / 2, 0]}>
+      {/* Body */}
+      <mesh position={[0, 0.5, 0]} castShadow>
+        <boxGeometry args={[3, 1.5, 1.5]} />
+        <meshStandardMaterial color="#ffffff" />
+      </mesh>
+      {/* Cabin */}
+      <mesh position={[1.5, 0.25, 0]} castShadow>
+        <boxGeometry args={[1, 1, 1.5]} />
+        <meshStandardMaterial color="#f8fafc" />
+      </mesh>
+      {/* Wheels */}
+      {[-1, 1].map((x) => 
+        [-0.75, 0.75].map((z) => (
+          <mesh key={`${x}-${z}`} position={[x, -0.25, z]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
+            <meshStandardMaterial color="#1e293b" />
+          </mesh>
+        ))
+      )}
+      <mesh position={[1.5, -0.25, 0.75]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
+        <meshStandardMaterial color="#1e293b" />
+      </mesh>
+      <mesh position={[1.5, -0.25, -0.75]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.3, 0.3, 0.2, 16]} />
+        <meshStandardMaterial color="#1e293b" />
+      </mesh>
+      {/* Logo/Text */}
+      <mesh position={[0, 0.5, 0.76]}>
+        <planeGeometry args={[1.5, 0.5]} />
+        <meshBasicMaterial color="#3b82f6" />
+      </mesh>
+    </group>
+  );
+}
 
 function CCTV() {
   const camRef = useRef();
@@ -226,13 +327,14 @@ function ScenarioSimulation() {
 
   useFrame((state, delta) => {
     if (actorRef.current && !triggered && activeScenario !== 'pet') {
-      if (actorRef.current.position.z >= 1.3) {
-        setTriggered(true);
-        // Only trigger the store if it's not already triggered by the dashboard UI.
-        // Actually, the dashboard UI already triggered processEvent, we just play the animation.
-        // BUT wait, if we are in Dashboard, clicking the button already triggered the event.
-        // The prompt says "any option that user clicks will lead to different scenarious".
-        // The event is already in the store. So we don't call processEvent here anymore, otherwise we'd duplicate it.
+      if (activeScenario === 'delivery') {
+        if (actorRef.current.rotation.y > 1.0) { // Dropped package and turned around
+          setTriggered(true);
+        }
+      } else {
+        if (actorRef.current.position.z >= 1.3) {
+          setTriggered(true);
+        }
       }
     } else if (activeScenario === 'pet' && !triggered) {
       // Pet triggers randomly/quickly
@@ -273,6 +375,8 @@ function ScenarioSimulation() {
     activeScenario === 'intrusion' ? bannerStyles.red : 
     activeScenario === 'delivery' ? bannerStyles.yellow : 
     activeScenario === 'pet' ? bannerStyles.amber : bannerStyles.blue;
+
+  const isDaytime = activeScenario === 'delivery';
 
   return (
     <group>
@@ -338,20 +442,22 @@ function ScenarioSimulation() {
       {/* Ground */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[20, 20]} />
-        <meshStandardMaterial color="#0f172a" />
+        <meshStandardMaterial color={isDaytime ? "#16a34a" : "#0f172a"} />
       </mesh>
 
       <CCTV />
       <MotionSensor triggered={triggered} scenario={activeScenario} />
       
       {getActor()}
+      {activeScenario === 'delivery' && <DeliveryVan />}
       
       {/* Lights */}
-      <ambientLight intensity={0.2} />
-      <directionalLight position={[5, 5, -5]} intensity={1.5} castShadow />
+      <ambientLight intensity={isDaytime ? 1.0 : 0.2} />
+      <directionalLight position={[5, 10, -5]} intensity={isDaytime ? 2.5 : 1.5} castShadow={!isDaytime} />
+      {isDaytime && <directionalLight position={[-5, 10, 5]} intensity={1.5} castShadow />}
       <pointLight 
         position={[0, 2, 1.5]} 
-        intensity={triggered ? 2 : 0.5} 
+        intensity={triggered ? 2 : (isDaytime ? 0 : 0.5)} 
         color={
           triggered ? (
             activeScenario === 'intrusion' ? "#ef4444" : 
@@ -365,10 +471,14 @@ function ScenarioSimulation() {
 }
 
 export default function HouseScene() {
+  const activeScenario = useSystemStore(state => state.activeScenario);
+  const isDaytime = activeScenario === 'delivery';
+  const bgColor = isDaytime ? '#87CEEB' : '#0B0F14';
+
   return (
     <Canvas shadows camera={{ position: [6, 4, -7], fov: 45 }}>
-      <color attach="background" args={['#0B0F14']} />
-      <fog attach="fog" args={['#0B0F14', 5, 15]} />
+      <color attach="background" args={[bgColor]} />
+      <fog attach="fog" args={[bgColor, 5, isDaytime ? 25 : 15]} />
       <ScenarioSimulation />
       <OrbitControls maxPolarAngle={Math.PI / 2 - 0.1} />
     </Canvas>
