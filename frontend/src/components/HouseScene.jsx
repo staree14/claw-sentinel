@@ -181,28 +181,152 @@ const Pet = forwardRef(({ position, ...props }, ref) => {
   const group = useRef();
   useImperativeHandle(ref, () => group.current);
 
+  const frontLeftLeg = useRef();
+  const frontRightLeg = useRef();
+  const backLeftLeg = useRef();
+  const backRightLeg = useRef();
+  const tail = useRef();
+
+  const stateRef = useRef({ phase: 'walking', waitTime: 0, targetX: 1, targetZ: 1 });
+
   useFrame((state, delta) => {
     if (!group.current) return;
-    const t = state.clock.elapsedTime * 2;
-    // Run in a circle in the yard
-    group.current.position.x = Math.sin(t) * 2;
-    group.current.position.z = Math.cos(t) * 1.5;
-    group.current.rotation.y = t + Math.PI;
-    // Bobbing
-    group.current.position.y = Math.abs(Math.sin(t * 5)) * 0.1;
+    const t = state.clock.elapsedTime;
+    const st = stateRef.current;
+    
+    let moving = true;
+    let speed = 1.5;
+
+    if (st.phase === 'walking') {
+      const dx = st.targetX - group.current.position.x;
+      const dz = st.targetZ - group.current.position.z;
+      const dist = Math.sqrt(dx*dx + dz*dz);
+      
+      if (dist < 0.1) {
+        st.phase = 'sniffing';
+        st.waitTime = 0;
+        moving = false;
+      } else {
+        // Move towards target
+        const moveX = (dx / dist) * delta * speed;
+        const moveZ = (dz / dist) * delta * speed;
+        group.current.position.x += moveX;
+        group.current.position.z += moveZ;
+        
+        // Smooth rotation
+        const targetRotation = Math.atan2(dx, dz);
+        const currentRot = group.current.rotation.y;
+        let diff = targetRotation - currentRot;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        group.current.rotation.y += diff * delta * 8;
+      }
+    } else if (st.phase === 'sniffing') {
+      st.waitTime += delta;
+      moving = false;
+      if (st.waitTime > 3.0) {
+        st.phase = 'walking';
+        // Pick new random target within yard bounds x: [-2, 2], z: [-1, 2]
+        st.targetX = (Math.random() - 0.5) * 4;
+        st.targetZ = (Math.random() - 0.5) * 3 + 0.5;
+      }
+    }
+
+    // Animation
+    if (moving) {
+      // Trot animation
+      const trot = t * speed * 5;
+      if (frontLeftLeg.current) frontLeftLeg.current.rotation.x = Math.sin(trot) * 0.4;
+      if (backRightLeg.current) backRightLeg.current.rotation.x = Math.sin(trot) * 0.4;
+      if (frontRightLeg.current) frontRightLeg.current.rotation.x = -Math.sin(trot) * 0.4;
+      if (backLeftLeg.current) backLeftLeg.current.rotation.x = -Math.sin(trot) * 0.4;
+      
+      // Bobbing
+      group.current.position.y = Math.abs(Math.sin(trot * 2)) * 0.03;
+      group.current.rotation.x = 0; // Reset pitch
+      
+      // Tail wag
+      if (tail.current) tail.current.rotation.z = Math.sin(trot * 2) * 0.2;
+    } else {
+      // Reset legs
+      if (frontLeftLeg.current) frontLeftLeg.current.rotation.x = 0;
+      if (backRightLeg.current) backRightLeg.current.rotation.x = 0;
+      if (frontRightLeg.current) frontRightLeg.current.rotation.x = 0;
+      if (backLeftLeg.current) backLeftLeg.current.rotation.x = 0;
+      
+      // Sniffing animation
+      if (st.phase === 'sniffing') {
+        group.current.position.y = -0.05; 
+        group.current.rotation.x = Math.sin(t * 3) * 0.05 + 0.1; // head down
+        if (tail.current) tail.current.rotation.z = Math.sin(t * 10) * 0.3; // rapid wag tail while sniffing
+      } else {
+        group.current.position.y = 0;
+        group.current.rotation.x = 0;
+      }
+    }
   });
 
   return (
     <group ref={group} position={position} {...props}>
-      <mesh position={[0, 0.2, 0]} castShadow>
-        <boxGeometry args={[0.2, 0.2, 0.4]} />
-        <meshStandardMaterial color="#b45309" />
+      {/* Body */}
+      <mesh position={[0, 0.25, 0]} castShadow>
+        <boxGeometry args={[0.15, 0.15, 0.3]} />
+        <meshStandardMaterial color="#8B4513" />
       </mesh>
+      
       {/* Head */}
-      <mesh position={[0, 0.3, 0.2]} castShadow>
-        <boxGeometry args={[0.15, 0.15, 0.15]} />
-        <meshStandardMaterial color="#92400e" />
+      <mesh position={[0, 0.35, 0.15]} castShadow>
+        <boxGeometry args={[0.12, 0.12, 0.15]} />
+        <meshStandardMaterial color="#A0522D" />
       </mesh>
+      {/* Ears */}
+      <mesh position={[-0.05, 0.42, 0.1]} castShadow>
+        <boxGeometry args={[0.04, 0.06, 0.04]} />
+        <meshStandardMaterial color="#4A2511" />
+      </mesh>
+      <mesh position={[0.05, 0.42, 0.1]} castShadow>
+        <boxGeometry args={[0.04, 0.06, 0.04]} />
+        <meshStandardMaterial color="#4A2511" />
+      </mesh>
+      {/* Snout */}
+      <mesh position={[0, 0.32, 0.23]} castShadow>
+        <boxGeometry args={[0.06, 0.06, 0.08]} />
+        <meshStandardMaterial color="#4A2511" />
+      </mesh>
+
+      {/* Tail */}
+      <group ref={tail} position={[0, 0.3, -0.15]}>
+        <mesh position={[0, 0.05, -0.05]} rotation={[Math.PI / 4, 0, 0]} castShadow>
+          <boxGeometry args={[0.03, 0.15, 0.03]} />
+          <meshStandardMaterial color="#A0522D" />
+        </mesh>
+      </group>
+
+      {/* Legs */}
+      <group ref={frontLeftLeg} position={[-0.05, 0.25, 0.1]}>
+        <mesh position={[0, -0.1, 0]} castShadow>
+          <boxGeometry args={[0.04, 0.2, 0.04]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+      </group>
+      <group ref={frontRightLeg} position={[0.05, 0.25, 0.1]}>
+        <mesh position={[0, -0.1, 0]} castShadow>
+          <boxGeometry args={[0.04, 0.2, 0.04]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+      </group>
+      <group ref={backLeftLeg} position={[-0.05, 0.25, -0.1]}>
+        <mesh position={[0, -0.1, 0]} castShadow>
+          <boxGeometry args={[0.04, 0.2, 0.04]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+      </group>
+      <group ref={backRightLeg} position={[0.05, 0.25, -0.1]}>
+        <mesh position={[0, -0.1, 0]} castShadow>
+          <boxGeometry args={[0.04, 0.2, 0.04]} />
+          <meshStandardMaterial color="#8B4513" />
+        </mesh>
+      </group>
     </group>
   );
 });
@@ -337,8 +461,7 @@ function ScenarioSimulation() {
         }
       }
     } else if (activeScenario === 'pet' && !triggered) {
-      // Pet triggers randomly/quickly
-      if (state.clock.elapsedTime > 2) {
+      if (actorRef.current && actorRef.current.position.z > 0.5 && actorRef.current.position.z < 1.5) {
         setTriggered(true);
       }
     }

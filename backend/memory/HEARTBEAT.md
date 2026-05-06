@@ -43,3 +43,19 @@
 - **Decision**: `IGNORE`
 - **Reasoning**: Event doorbell at 14:00 matches expected household routine. Anomaly score 0.32 is within normal range. User presence and timing are consistent with 90-day behavioral baseline.
 ---
+
+## [2026-05-06 23:14:05]
+- **Event**: `indoor_motion` @ 01:20
+- **Source**: hallway_sensor
+- **User Home**: True
+- **Decision**: `IGNORE`
+- **Reasoning**: Event indoor_motion at 01:20 matches expected household routine. Anomaly score 0.38 is within normal range. User presence and timing are consistent with 90-day behavioral baseline.
+---
+
+## [2026-05-06 23:14:51]
+- **Event**: `indoor_motion` @ 01:20
+- **Source**: hallway_sensor
+- **User Home**: True
+- **Decision**: `IGNORE`
+- **Reasoning**: Event indoor_motion at 01:20 matches expected household routine. Anomaly score 0.38 is within normal range. User presence and timing are consistent with 90-day behavioral baseline.
+---
