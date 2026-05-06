@@ -25,6 +25,7 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
       group.current.rotation.y = 0;
       group.current.rotation.x = 0;
       group.current.position.y = 0;
+      group.current.visible = true;
     }
   }, [scenario]);
 
@@ -102,13 +103,34 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
         packageRef.current.visible = st.phase !== 'walking_back';
       }
     } else {
-      // Return: Walk straight through the gap
-      if (z < 1.3) {
-        const walkSpeed = Math.max(0.5, (1.3 - z) * 1.5);
-        group.current.position.z += walkSpeed * delta;
-        group.current.position.y = 0;
-      } else {
+      // Return: Walk to door, wait for it to open, then walk inside
+      const st = stateRef.current;
+      if (!st.phase || st.phase === 'walking_to_door') {
+        st.phase = 'walking_to_door';
+        if (z < 0.8) {
+          const walkSpeed = 1.5;
+          group.current.position.z += walkSpeed * delta;
+          group.current.position.y = 0;
+        } else {
+          st.phase = 'waiting';
+          st.waitTime = 0;
+          moving = false;
+        }
+      } else if (st.phase === 'waiting') {
         moving = false;
+        st.waitTime += delta;
+        if (st.waitTime > 1.0) { // wait for door to open
+          st.phase = 'walking_inside';
+        }
+      } else if (st.phase === 'walking_inside') {
+        if (z < 2.5) {
+          const walkSpeed = 1.5;
+          group.current.position.z += walkSpeed * delta;
+          group.current.position.y = 0;
+        } else {
+          moving = false;
+          group.current.visible = false;
+        }
       }
     }
 
@@ -453,6 +475,10 @@ function ScenarioSimulation() {
     if (actorRef.current && !triggered && activeScenario !== 'pet') {
       if (activeScenario === 'delivery') {
         if (actorRef.current.rotation.y > 1.0) { // Dropped package and turned around
+          setTriggered(true);
+        }
+      } else if (activeScenario === 'return') {
+        if (actorRef.current.position.z >= 0.75) {
           setTriggered(true);
         }
       } else {
