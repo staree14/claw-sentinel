@@ -8,9 +8,10 @@
 ![OpenClaw](https://img.shields.io/badge/Orchestration-OpenClaw-blueviolet?style=for-the-badge)
 
 > **"Every existing system tells you what happened. ClawSentinel tells you if it matters. It is the first system that knows the difference between your cat and a criminal."**
+---
 
-DEMO LINK: https://youtu.be/_dhuv23u6BU
-----
+DEMO LINK: [Check out our smart claw sentinel](https://youtu.be/o_s7t8y3fTA)
+
 PRESENTATION LINK: https://canva.link/fzn91jknohnwxxy
 
 ---
