@@ -25,13 +25,13 @@ export default function CenterPanel({ activeScenario, currentEvent, analysis, ev
         <AnomalyScore analysis={analysis} isThinking={isThinking} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2 mt-auto">
+      <div className="flex flex-col gap-6 mt-auto">
         <div className="rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-2xl p-6 xl:p-8 flex flex-col">
           <div className="flex items-center gap-3 mb-6">
             <Activity className="h-4 w-4 text-slate-400" />
             <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Anomaly Visualization</h3>
           </div>
-          <div className="flex-1 min-h-[220px] rounded-lg overflow-hidden relative">
+          <div className="flex-1 min-h-[350px] rounded-lg overflow-hidden relative">
             <HouseScene />
           </div>
         </div>

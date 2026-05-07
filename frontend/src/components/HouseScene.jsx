@@ -20,7 +20,8 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
   const packageRef = useRef();
 
   useEffect(() => {
-    stateRef.current = { phase: 'walking_to_door', waitTime: 0 };
+    const initialPhase = scenario === 'intrusion' ? 'sneaking' : 'walking_to_door';
+    stateRef.current = { phase: initialPhase, waitTime: 0 };
     if (group.current) {
       group.current.rotation.y = 0;
       group.current.rotation.x = 0;
@@ -39,28 +40,65 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
     let moving = true;
     
     if (scenario === 'intrusion') {
-      // Intrusion: Starts at x = 1.5, jumps over fence
-      if (z < -2) {
-        group.current.position.z += 1.2 * delta;
-        group.current.position.y = 0;
-      } else if (z >= -2 && z < -1) {
-        group.current.position.z += 1.5 * delta;
-        const progress = (z - (-2)) / 1;
-        group.current.position.y = Math.sin(progress * Math.PI) * 1.5;
-        limbSwing = 0;
-        if (leftArm.current) leftArm.current.rotation.x = -Math.PI / 1.5;
-        if (rightArm.current) rightArm.current.rotation.x = -Math.PI / 1.5;
-        if (leftLeg.current) leftLeg.current.rotation.x = Math.PI / 4;
-        if (rightLeg.current) rightLeg.current.rotation.x = Math.PI / 4;
+      const st = stateRef.current;
+      if (!st.phase) st.phase = 'sneaking';
+
+      if (st.phase === 'sneaking') {
+        // Intrusion: Starts at x = 1.5, jumps over fence
+        if (z < -2) {
+          group.current.position.z += 1.2 * delta;
+          group.current.position.y = 0;
+        } else if (z >= -2 && z < -1) {
+          group.current.position.z += 1.5 * delta;
+          const progress = (z - (-2)) / 1;
+          group.current.position.y = Math.sin(progress * Math.PI) * 1.5;
+          limbSwing = 0;
+          if (leftArm.current) leftArm.current.rotation.x = -Math.PI / 1.5;
+          if (rightArm.current) rightArm.current.rotation.x = -Math.PI / 1.5;
+          if (leftLeg.current) leftLeg.current.rotation.x = Math.PI / 4;
+          if (rightLeg.current) rightLeg.current.rotation.x = Math.PI / 4;
+          moving = false;
+        } else if (z >= -1 && z < 1.3) {
+          // move diagonally towards door (x=0)
+          group.current.position.x -= (group.current.position.x / 1.0) * delta * 1.5;
+          const walkSpeed = Math.max(0.5, (1.3 - z) * 1.5);
+          group.current.position.z += walkSpeed * delta;
+          group.current.position.y = 0;
+        } else {
+          st.phase = 'spotted';
+          st.waitTime = 0;
+          moving = false;
+        }
+      } else if (st.phase === 'spotted') {
         moving = false;
-      } else if (z >= -1 && z < 1.3) {
-        // move diagonally towards door (x=0)
-        group.current.position.x -= (group.current.position.x / 1.0) * delta * 1.5;
-        const walkSpeed = Math.max(0.5, (1.3 - z) * 1.5);
-        group.current.position.z += walkSpeed * delta;
-        group.current.position.y = 0;
-      } else {
-        moving = false;
+        st.waitTime += delta;
+        // Freeze with hands up
+        if (leftArm.current) leftArm.current.rotation.x = -Math.PI;
+        if (rightArm.current) rightArm.current.rotation.x = -Math.PI;
+        if (st.waitTime > 0.8) {
+          st.phase = 'running_away';
+          group.current.rotation.y = Math.PI; // turn around
+        }
+      } else if (st.phase === 'running_away') {
+        speed = 4.5; // sprint fast
+        limbSwing = 1.2;
+        group.current.position.z -= 4.0 * delta;
+        
+        // Vault over the gate
+        if (z < -0.5 && z > -2.5) {
+          const progress = (z - (-0.5)) / -2.0; 
+          group.current.position.y = Math.sin(progress * Math.PI) * 1.5;
+          limbSwing = 0;
+          if (leftLeg.current) leftLeg.current.rotation.x = -Math.PI / 4;
+          if (rightLeg.current) rightLeg.current.rotation.x = Math.PI / 4;
+        } else {
+          group.current.position.y = 0;
+        }
+
+        if (z < -6) {
+          group.current.visible = false;
+          moving = false;
+        }
       }
     } else if (scenario === 'delivery') {
       const st = stateRef.current;
@@ -146,8 +184,10 @@ const Person = forwardRef(({ position, color, scenario, ...props }, ref) => {
       if (leftLeg.current) leftLeg.current.rotation.x = 0;
       if (rightLeg.current) rightLeg.current.rotation.x = 0;
       if (scenario !== 'delivery' || stateRef.current?.phase === 'walking_back') {
-        if (leftArm.current) leftArm.current.rotation.x = 0;
-        if (rightArm.current) rightArm.current.rotation.x = 0;
+        if (stateRef.current?.phase !== 'spotted') {
+          if (leftArm.current) leftArm.current.rotation.x = 0;
+          if (rightArm.current) rightArm.current.rotation.x = 0;
+        }
       }
       if (body.current && scenario !== 'delivery') body.current.position.y = 0.6;
     }
@@ -453,6 +493,9 @@ function ScenarioSimulation() {
   const [triggered, setTriggered] = useState(false);
   const actorRef = useRef();
   const doorRef = useRef();
+  const gateLeftRef = useRef();
+  const gateRightRef = useRef();
+  const lightRef = useRef();
 
   // Reset trigger when scenario changes
   useEffect(() => {
@@ -492,9 +535,41 @@ function ScenarioSimulation() {
       }
     }
 
-    // Door open animation for 'return'
+    // Door open/close animation for 'return'
     if (triggered && activeScenario === 'return' && doorRef.current) {
-      doorRef.current.rotation.y = Math.min(doorRef.current.rotation.y + delta * 2, Math.PI / 2);
+      const actorZ = actorRef.current?.position?.z || -5;
+      if (actorZ < 2.5) {
+        doorRef.current.rotation.y = Math.min(doorRef.current.rotation.y + delta * 2, Math.PI / 2);
+      } else {
+        doorRef.current.rotation.y = Math.max(doorRef.current.rotation.y - delta * 2, 0);
+      }
+    }
+
+    // Gate animation
+    if (gateLeftRef.current && gateRightRef.current) {
+      const actorZ = actorRef.current?.position?.z || -5;
+      const shouldOpenGate = (activeScenario === 'return' || activeScenario === 'delivery') && actorZ > -3.5 && actorZ < 2.0;
+      const targetLeft = shouldOpenGate ? -Math.PI / 2 : 0;
+      const targetRight = shouldOpenGate ? Math.PI / 2 : 0;
+      gateLeftRef.current.rotation.y += (targetLeft - gateLeftRef.current.rotation.y) * delta * 5;
+      gateRightRef.current.rotation.y += (targetRight - gateRightRef.current.rotation.y) * delta * 5;
+    }
+
+    // Alarm Strobe
+    if (lightRef.current) {
+      if (triggered && activeScenario === 'intrusion') {
+        const t = state.clock.elapsedTime;
+        lightRef.current.intensity = (Math.sin(t * 30) > 0) ? 5 : 0; 
+        lightRef.current.color.set(Math.sin(t * 15) > 0 ? "#ef4444" : "#1e40af");
+      } else {
+        const isDaytime = activeScenario === 'delivery' || activeScenario === 'return';
+        lightRef.current.intensity = triggered ? 2 : (isDaytime ? 0 : 0.5);
+        const targetColor = triggered ? (
+          activeScenario === 'delivery' ? "#f59e0b" : 
+          activeScenario === 'return' ? "#3b82f6" : "#fcd34d"
+        ) : "#ffffff";
+        lightRef.current.color.set(targetColor);
+      }
     }
   });
 
@@ -525,7 +600,8 @@ function ScenarioSimulation() {
     activeScenario === 'delivery' ? bannerStyles.yellow : 
     activeScenario === 'pet' ? bannerStyles.amber : bannerStyles.blue;
 
-  const isDaytime = activeScenario === 'delivery';
+  const isDaytime = activeScenario === 'delivery' || activeScenario === 'return';
+  const isMorning = activeScenario === 'return';
 
   return (
     <group>
@@ -534,6 +610,8 @@ function ScenarioSimulation() {
         <boxGeometry args={[8, 3.5, 4]} />
         <meshStandardMaterial color="#1e293b" />
       </mesh>
+
+
 
       {/* Door */}
       <group position={[-0.6, 1, 1.0]} ref={doorRef}>
@@ -562,29 +640,43 @@ function ScenarioSimulation() {
 
       {/* Fence (with gap in middle) */}
       <group position={[0, 0.5, -1.5]}>
-        {[-3, -2, -1, 1, 2, 3].map((x, i) => (
+        {[-5, -4, -3, -2, -1, 1, 2, 3, 4, 5].map((x, i) => (
           <mesh key={i} position={[x, 0, 0]} castShadow receiveShadow>
             <boxGeometry args={[0.2, 1.2, 0.1]} />
             <meshStandardMaterial color="#451a03" />
           </mesh>
         ))}
         {/* Left rail */}
-        <mesh position={[-1.5, 0.2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[3.2, 0.1, 0.1]} />
+        <mesh position={[-3.0, 0.2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.2, 0.1, 0.1]} />
           <meshStandardMaterial color="#78350f" />
         </mesh>
-        <mesh position={[-1.5, -0.2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[3.2, 0.1, 0.1]} />
+        <mesh position={[-3.0, -0.2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.2, 0.1, 0.1]} />
           <meshStandardMaterial color="#78350f" />
         </mesh>
         {/* Right rail */}
-        <mesh position={[1.5, 0.2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[3.2, 0.1, 0.1]} />
+        <mesh position={[3.0, 0.2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.2, 0.1, 0.1]} />
           <meshStandardMaterial color="#78350f" />
         </mesh>
-        <mesh position={[1.5, -0.2, 0]} castShadow receiveShadow>
-          <boxGeometry args={[3.2, 0.1, 0.1]} />
+        <mesh position={[3.0, -0.2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.2, 0.1, 0.1]} />
           <meshStandardMaterial color="#78350f" />
+        </mesh>
+      </group>
+
+      {/* Animated Gates */}
+      <group position={[-0.9, 0.5, -1.5]} ref={gateLeftRef}>
+        <mesh position={[0.45, 0, 0]} castShadow receiveShadow>
+          <boxGeometry args={[0.9, 0.8, 0.05]} />
+          <meshStandardMaterial color="#451a03" />
+        </mesh>
+      </group>
+      <group position={[0.9, 0.5, -1.5]} ref={gateRightRef}>
+        <mesh position={[-0.45, 0, 0]} castShadow receiveShadow>
+          <boxGeometry args={[0.9, 0.8, 0.05]} />
+          <meshStandardMaterial color="#451a03" />
         </mesh>
       </group>
 
@@ -601,19 +693,12 @@ function ScenarioSimulation() {
       {activeScenario === 'delivery' && <DeliveryVan />}
       
       {/* Lights */}
-      <ambientLight intensity={isDaytime ? 1.0 : 0.2} />
-      <directionalLight position={[5, 10, -5]} intensity={isDaytime ? 2.5 : 1.5} castShadow={!isDaytime} />
-      {isDaytime && <directionalLight position={[-5, 10, 5]} intensity={1.5} castShadow />}
+      <ambientLight intensity={isDaytime ? 1.0 : 0.2} color={isMorning ? "#FFDAB9" : "#ffffff"} />
+      <directionalLight position={[5, 10, -5]} intensity={isDaytime ? 2.5 : 1.5} castShadow={!isDaytime} color={isMorning ? "#FFDAB9" : "#ffffff"} />
+      {isDaytime && <directionalLight position={[-5, 10, 5]} intensity={1.5} castShadow color={isMorning ? "#FFDAB9" : "#ffffff"} />}
       <pointLight 
+        ref={lightRef}
         position={[0, 2, 1.5]} 
-        intensity={triggered ? 2 : (isDaytime ? 0 : 0.5)} 
-        color={
-          triggered ? (
-            activeScenario === 'intrusion' ? "#ef4444" : 
-            activeScenario === 'delivery' ? "#f59e0b" : 
-            activeScenario === 'return' ? "#3b82f6" : "#fcd34d"
-          ) : "#ffffff"
-        } 
       />
     </group>
   );
@@ -621,8 +706,9 @@ function ScenarioSimulation() {
 
 export default function HouseScene() {
   const activeScenario = useSystemStore(state => state.activeScenario);
-  const isDaytime = activeScenario === 'delivery';
-  const bgColor = isDaytime ? '#87CEEB' : '#0B0F14';
+  const isDaytime = activeScenario === 'delivery' || activeScenario === 'return';
+  const isMorning = activeScenario === 'return';
+  const bgColor = isMorning ? '#FFDAB9' : isDaytime ? '#87CEEB' : '#0B0F14';
 
   return (
     <Canvas shadows camera={{ position: [6, 4, -7], fov: 45 }}>
