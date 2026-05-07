@@ -76,11 +76,11 @@ class ActionAgent:
         action_map = {
             "secure": "Door Locked",
             "lock_door": "Door Locked",
-            "off_device": "Device Powered Off",
             "record": "Recording Started",
             "start_recording": "Recording Started",
             "safe": "Alert Dismissed",
             "dismiss": "Alert Dismissed",
+            "off_device": "Device Powered Off",
             "alert_user": "User Alerted (Confirmed via Dashboard)"
         }
         
@@ -137,9 +137,10 @@ class ActionAgent:
         if self._telegram_ready:
             try:
                 # Use ReplyKeyboardMarkup for "2-way convo" feel
-                # Clicking these sends the text as a message FROM the user
+                # Restore the "old" 2-row layout with new labels
                 keyboard = [
-                    [KeyboardButton("🔒 Secure"), KeyboardButton("📹 Record"), KeyboardButton("✅ Safe")]
+                    [KeyboardButton("🔒 Secure"), KeyboardButton("📹 Record")],
+                    [KeyboardButton("✅ Safe")]
                 ]
                 reply_markup = ReplyKeyboardMarkup(
                     keyboard, 
