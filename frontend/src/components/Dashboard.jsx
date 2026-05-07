@@ -4,6 +4,7 @@ import TopBar from "./dashboard/TopBar";
 import ScenarioPanel from "./dashboard/ScenarioPanel";
 import CenterPanel from "./dashboard/CenterPanel";
 import ReasoningPanel from "./dashboard/ReasoningPanel";
+import Toast from "./ui/Toast";
 import useSystemStore from "../store/useSystemStore";
 import { checkBackendHealth, getBackendTrace, executeAction } from "../lib/api";
 import { processEvent } from "../core/processEvent";
@@ -124,6 +125,7 @@ export default function Dashboard() {
           />
         </section>
       </div>
+      <Toast />
     </motion.main>
   );
 }

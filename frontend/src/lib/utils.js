@@ -4,9 +4,17 @@ export function evaluateEvent(event, mode) {
   const daytime = hour >= 8 && hour <= 18;
 
   if (mode === "Legacy System") {
+    // Legacy system is simple/reactive, but let's make it a bit more dynamic
+    // so the user doesn't see "86%" for everything.
+    let legacyScore = 0.5;
+    if (event.motion) legacyScore += 0.24;
+    if (event.event === "door_open") legacyScore += 0.12;
+    if (hour < 6 || hour > 22) legacyScore += 0.10;
+    legacyScore = Math.min(0.96, legacyScore);
+
     return {
-      anomalyScore: event.motion ? 0.86 : 0.58,
-      riskLevel: "Dangerous",
+      anomalyScore: legacyScore,
+      riskLevel: legacyScore > 0.8 ? "Dangerous" : legacyScore > 0.6 ? "Suspicious" : "Normal",
       reasoning:
         "Legacy rule engine raised an alert because activity was detected. It does not consider user presence, delivery windows, or event context.",
       actionTaken: "Alert user and dispatch generic siren notification.",
@@ -15,9 +23,9 @@ export function evaluateEvent(event, mode) {
   }
 
   let score = 0.18;
-  if (lateNight) score += 0.36;
-  if (!event.user_home) score += 0.28;
-  if (event.event === "door_open") score += 0.18;
+  if (lateNight) score += 0.42;  // Increased from 0.36
+  if (!event.user_home) score += 0.32; // Increased from 0.28
+  if (event.event === "door_open") score += 0.20; // Increased from 0.18
   if (event.event === "doorbell" && daytime) score -= 0.14;
   if (event.event === "indoor_motion" && event.user_home) score -= 0.16;
   score = Math.max(0.05, Math.min(0.98, score));
