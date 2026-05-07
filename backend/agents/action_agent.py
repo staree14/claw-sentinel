@@ -21,8 +21,7 @@ from telegram.error import TelegramError
 
 logger = logging.getLogger(__name__)
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
 
 
 class ActionAgent:
@@ -94,7 +93,7 @@ class ActionAgent:
         action_desc = action_map.get(key, action_name)
         
         display_name = (
-            f"✅ *Action Executed*: {action_desc}\n\n"
+            f"✅ <b>Action Executed</b>: {action_desc}\n\n"
             f"🏠 Home Status: Secure  \n"
             f"📡 Mode: Offline AI Active  \n"
             f"🧠 Monitoring continues... "
@@ -107,7 +106,7 @@ class ActionAgent:
                 await self._bot.send_message(
                     chat_id=self._chat_id,
                     text=display_name,
-                    parse_mode="Markdown"
+                    parse_mode="HTML"
                 )
                 logger.info("[ActionAgent] Telegram confirmation sent successfully")
             except Exception as e:
@@ -151,10 +150,10 @@ class ActionAgent:
                 await self._bot.send_message(
                     chat_id=self._chat_id,
                     text=message,
-                    parse_mode="Markdown",
+                    parse_mode="HTML",
                     reply_markup=reply_markup
                 )
-                logger.info(f"[ActionAgent] ✅ Telegram alert sent to {TELEGRAM_CHAT_ID}")
+                logger.info(f"[ActionAgent] ✅ Telegram alert sent to {self._chat_id}")
                 actions.append("telegram_delivered")
             except TelegramError as e:
                 logger.error(f"[ActionAgent] ❌ Telegram send failed: {e}")
@@ -205,12 +204,12 @@ class ActionAgent:
             recommendation = "Maintain Monitoring"
         
         return (
-            f"🚨 *ClawSentinel Alert*\n\n"
-            f"*Risk*: {risk_level} ({score:.2f})\n\n"
+            f"🚨 <b>ClawSentinel Alert</b>\n\n"
+            f"<b>Risk</b>: {risk_level} ({score:.2f})\n\n"
             f"📍 {source} {event_type} at {time}  \n"
-            f"👤 *User*: {user_status}  \n\n"
-            f"🧠 *Unusual activity detected*\n\n"
-            f"👉 *Recommended*: {recommendation}"
+            f"👤 <b>User</b>: {user_status}  \n\n"
+            f"🧠 <b>Unusual activity detected</b>\n\n"
+            f"👉 <b>Recommended</b>: {recommendation}"
         )
 
     # ──────────────────────────────────────────
