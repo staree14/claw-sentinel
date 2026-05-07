@@ -79,8 +79,17 @@ Utilizes **Scikit-Learn Isolation Forests** trained on 90 days of historical dat
 
 ### Layer 3 — Contextual Reasoning (OpenClaw)
 The "Brain" of the system. An orchestration of specialized agents that reason over context.
-- **Stateful Memory**: Uses `SOUL.md` and `HEARTBEAT.md` to maintain long-term behavioral context.
-- **Reasoning**: "The back door opened, but the owner's phone is connected to the home Wi-Fi — this is a safe return, not an intrusion."
+
+#### 🧠 Stateful Memory Architecture
+ClawSentinel uses a dual-layer memory system to maintain behavioral context:
+- **Short-Term (Heartbeat)**: A rolling event log stored in [`HEARTBEAT.md`](./backend/memory/HEARTBEAT.md). It tracks the last 50 events and 10 decisions to ensure temporal continuity (e.g., recognizing that an alarm was recently triggered).
+- **Long-Term (Soul)**: A persistent behavioral baseline stored in [`SOUL.md`](./backend/memory/SOUL.md). It defines the "identity" of the home—routines, typical hours of activity, and known anomaly signatures.
+
+#### ⚡ Agent Skills
+The system's capabilities are formalized as **OpenClaw Skills**, which act as a secure registry of actions the agents can perform:
+- [**Notify User**](./backend/skills/notify-user/SKILL.md): Secure Telegram alerts with interactive controls.
+- [**Lock Door**](./backend/skills/lock-door/SKILL.md): Physical security actuation (Gated by confirmation).
+- [**Start Recording**](./backend/skills/start-recording/SKILL.md): Forensic visual capture triggered by high-risk anomalies.
 
 ---
 
