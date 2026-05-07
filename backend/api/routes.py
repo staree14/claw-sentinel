@@ -168,9 +168,11 @@ async def telegram_webhook(payload: dict, request: Request):
             # Map common text phrases to actions (case-insensitive)
             normalized_text = text.lower()
             action = None
-            if "lock" in normalized_text:     action = "lock_door"
-            elif "off" in normalized_text:    action = "off_device"
+            if "secure" in normalized_text:   action = "lock_door"
             elif "record" in normalized_text: action = "start_recording"
+            elif "safe" in normalized_text:   action = "dismiss"
+            elif "lock" in normalized_text:   action = "lock_door"
+            elif "off" in normalized_text:    action = "off_device"
             elif "dismiss" in normalized_text: action = "dismiss"
 
             if action:
