@@ -18,6 +18,7 @@ load_dotenv()
 
 from api.routes import router
 from core.orchestrator import Orchestrator
+from core.telegram_bot import init_telegram_bot
 
 # ──────────────────────────────────────────────────────────────
 # Logging
@@ -45,16 +46,29 @@ async def lifespan(app: FastAPI):
     logger.info("  ClawSentinel — Booting multi-agent pipeline")
     logger.info("=" * 60)
 
+    # 1. Initialize Orchestrator
     orchestrator = Orchestrator()
     await orchestrator.startup()
     app.state.orchestrator = orchestrator
+
+    # 2. Start Telegram Bot Listener (Polling)
+    # This removes the need for a separate telegram_runner.py script
+    bot_app = await init_telegram_bot(orchestrator)
+    app.state.bot_app = bot_app
 
     logger.info("🛡️  ClawSentinel is online and ready to protect")
     logger.info("=" * 60)
 
     yield  # App is running
 
+    # ───────────────── SHUTDOWN ─────────────────
     logger.info("[ClawSentinel] Shutting down gracefully")
+    
+    if bot_app:
+        logger.info("[ClawSentinel] Stopping Telegram bot...")
+        await bot_app.updater.stop()
+        await bot_app.stop()
+        await bot_app.shutdown()
 
 
 # ──────────────────────────────────────────────────────────────

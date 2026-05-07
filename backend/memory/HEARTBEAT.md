@@ -301,3 +301,43 @@
 - **Reasoning**: ⚠️ ESCALATED — High-risk pattern detected: door_open at 03:00 with anomaly score 0.98. User home=False. Event falls outside expected behavioral baseline — immediate action required.
 >>>>>>> Stashed changes
 ---
+
+## [2026-05-10 15:03:52]
+- **Event**: `door_open` @ 03:00
+- **Source**: front_entry
+- **User Home**: False
+- **Decision**: `ALERT`
+- **Reasoning**: High-risk pattern detected: door_open at 03:00 with anomaly score 0.98. User home=False. Event falls outside expected behavioral baseline — immediate action required.
+---
+
+## [2026-05-10 15:15:05]
+- **Event**: `door_open` @ 03:00
+- **Source**: front_entry
+- **User Home**: False
+- **Decision**: `ALERT`
+- **Reasoning**: High-risk pattern detected: door_open at 03:00 with anomaly score 0.98. User home=False. Event falls outside expected behavioral baseline — immediate action required.
+---
+
+## [2026-05-10 15:15:30]
+- **Event**: `doorbell` @ 14:00
+- **Source**: porch_camera
+- **User Home**: False
+- **Decision**: `IGNORE`
+- **Reasoning**: Event doorbell at 14:00 matches expected household routine. Anomaly score 0.32 is within normal range. User presence and timing are consistent with 90-day behavioral baseline.
+---
+
+## [2026-05-10 15:15:38]
+- **Event**: `door_open` @ 03:00
+- **Source**: front_entry
+- **User Home**: False
+- **Decision**: `ALERT`
+- **Reasoning**: High-risk pattern detected: door_open at 03:00 with anomaly score 0.98. User home=False. Event falls outside expected behavioral baseline — immediate action required.
+---
+
+## [2026-05-10 15:19:12]
+- **Event**: `door_open` @ 03:00
+- **Source**: front_entry
+- **User Home**: False
+- **Decision**: `ALERT`
+- **Reasoning**: High-risk pattern detected: door_open at 03:00 with anomaly score 0.98. User home=False. Event falls outside expected behavioral baseline — immediate action required.
+---

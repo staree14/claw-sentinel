@@ -146,7 +146,7 @@ async def telegram_webhook(payload: dict, request: Request):
             logger.info(f"[Telegram Webhook] Callback '{action}' triggered by @{user}")
             
             # Execute the action
-            result = await orchestrator.execute_action(action)
+            result = await orchestrator.execute_action(action, send_telegram=False)
             
             # Answer callback query
             try:
@@ -178,7 +178,7 @@ async def telegram_webhook(payload: dict, request: Request):
 
             if action:
                 logger.info(f"[Telegram Webhook] Recognized CONFIRMATION for '{action}' from text '{text}'")
-                result = await orchestrator.execute_action(action)
+                result = await orchestrator.execute_action(action, send_telegram=False)
                 return {"status": "ok", "action": action, "user": user}
             else:
                 logger.warning(f"[Telegram Webhook] No action mapped for text: '{text}'")

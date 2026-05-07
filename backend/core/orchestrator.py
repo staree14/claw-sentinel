@@ -159,9 +159,9 @@ class Orchestrator:
         recent_alerts = context.get("recent_alert_count", 0)
         return recent_alerts >= 2  # 2 prior + current = 3 consecutive
 
-    async def execute_action(self, action_name: str) -> dict:
+    async def execute_action(self, action_name: str, send_telegram: bool = True) -> dict:
         """Explicitly execute a confirmed action."""
-        return await self.action_agent.execute_confirmed_action(action_name)
+        return await self.action_agent.execute_confirmed_action(action_name, send_telegram=send_telegram)
 
     def get_state(self) -> dict:
         """Return current memory state for GET /state."""
