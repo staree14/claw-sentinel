@@ -7,3 +7,6 @@ __pycache__/
 .gemini/
 
 backend/.env
+backend/venv
+ml/venv
+backend/debug_telegram.py
