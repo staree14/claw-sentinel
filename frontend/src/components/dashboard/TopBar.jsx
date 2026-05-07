@@ -21,29 +21,17 @@ export default function TopBar({ system, setSystem, mode, setMode, backendOnline
         </div>
       </div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="relative group">
-          <select
-            value={system}
-            onChange={(event) => setSystem(event.target.value)}
-            className="h-11 w-full appearance-none rounded-xl border border-white/10 bg-white/5 px-4 pr-10 text-sm font-medium tracking-wide text-slate-200 outline-none transition-all duration-300 hover:border-cyan-400/40 focus:border-cyan-400/60 sm:w-56"
-          >
-            <option value="SmartThings">SmartThings API</option>
-            <option value="Generic API">Generic REST</option>
-            <option value="Simulation Mode">Simulation Mode</option>
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-4 top-[14px] h-4 w-4 text-slate-500 transition-colors duration-300 group-hover:text-cyan-400" />
-        </div>
-        
+
+
         <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-white/5 p-1 h-11">
           {["Legacy System", "ClawSentinel AI"].map((item) => (
             <button
               key={item}
               onClick={() => setMode(item)}
-              className={`rounded-lg px-4 text-xs font-medium tracking-wide transition-all duration-300 ${
-                mode === item 
-                  ? "bg-white text-slate-950 shadow-md" 
+              className={`rounded-lg px-4 text-xs font-medium tracking-wide transition-all duration-300 ${mode === item
+                  ? "bg-white text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-slate-200 hover:bg-white/5"
-              }`}
+                }`}
             >
               {item}
             </button>
