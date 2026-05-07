@@ -21,8 +21,7 @@ from telegram.error import TelegramError
 
 logger = logging.getLogger(__name__)
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
 
 
 class ActionAgent:
@@ -38,15 +37,17 @@ class ActionAgent:
     def __init__(self):
         self._telegram_ready = False
         self._bot = None
+        self._token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+        self._chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
         self._setup_telegram()
 
     def _setup_telegram(self):
         """Initialize Telegram Bot client."""
-        if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        if not self._token or not self._chat_id:
             logger.warning("[ActionAgent] Telegram credentials missing — notifications disabled")
             return
         try:
-            self._bot = Bot(token=TELEGRAM_BOT_TOKEN)
+            self._bot = Bot(token=self._token)
             self._telegram_ready = True
             logger.info("[ActionAgent] Telegram bot initialized")
         except Exception as e:
@@ -65,40 +66,52 @@ class ActionAgent:
         else:
             return self._handle_ignore(event)
 
-    async def execute_confirmed_action(self, action_name: str) -> dict:
+    async def execute_confirmed_action(self, action_name: str, send_telegram: bool = True) -> dict:
         """
         Executes a physical action that was previously pending confirmation.
         """
         logger.info(f"[ActionAgent] Executing CONFIRMED action: {action_name}")
         
         # Human-friendly mapping for buttons
-        # Normalize keys to lowercase and snake_case for robust matching
-        msg_map = {
-            "lock_door": "🔒 *Action Executed*: Door Locked. You are now secure.",
-            "off_device": "🔌 *Action Executed*: Device Powered Off.",
-            "start_recording": "📹 *Action Executed*: Recording Started.",
-            "dismiss": "✅ *Action Executed*: Alert Dismissed.",
-            "alert_user": "✅ *Action Executed*: User Alerted (Confirmed via Dashboard)"
+        action_map = {
+            "lock_door": "Door Locked 🔒",
+            "off_device": "Device Powered Off 🔌",
+            "start_recording": "Recording Started 📹",
+            "dismiss": "Alert Dismissed ✅",
+            "secure": "Door Locked 🔒",
+            "record": "Recording Started 📹",
+            "safe": "Alert Dismissed ✅"
         }
         
-        # Normalize input: "Lock door" -> "lock_door"
-        key = action_name.lower().replace(" ", "_")
-        display_name = msg_map.get(key, f"Action Executed: {action_name}")
+        # Normalize: "🔒 Secure" -> "secure", "lock_door" -> "lock_door"
+        key = action_name.lower()
+        for emoji in ["🔒", "📹", "✅", "🔇", "🔌"]:
+            key = key.replace(emoji, "")
+        key = key.strip().replace(" ", "_")
+        
+        action_desc = action_map.get(key, action_name)
+        
+        display_name = (
+            f"✅ <b>Action Executed</b>: {action_desc}\n\n"
+            f"🏠 Home Status: Secure  \n"
+            f"📡 Mode: Offline AI Active  \n"
+            f"🧠 Monitoring continues... "
+        )
 
         # Simulate real hardware interaction
-        if self._telegram_ready:
+        if send_telegram and self._telegram_ready and self._bot:
             try:
-                logger.info(f"[ActionAgent] Sending Telegram confirmation: {display_name}")
+                logger.info(f"[ActionAgent] Sending Telegram confirmation to {self._chat_id}")
                 await self._bot.send_message(
-                    chat_id=TELEGRAM_CHAT_ID,
+                    chat_id=self._chat_id,
                     text=display_name,
-                    parse_mode="Markdown"
+                    parse_mode="HTML"
                 )
                 logger.info("[ActionAgent] Telegram confirmation sent successfully")
             except Exception as e:
                 logger.error(f"Failed to send confirmation to Telegram: {e}")
         else:
-            logger.warning("[ActionAgent] Telegram not ready — confirmation skipped")
+            logger.info(f"[ActionAgent] Telegram confirmation skipped (send_telegram={send_telegram})")
 
         return {
             "status": "success",
@@ -123,9 +136,9 @@ class ActionAgent:
         if self._telegram_ready:
             try:
                 # Use ReplyKeyboardMarkup for "2-way convo" feel
-                # Clicking these sends the text as a message FROM the user
+                # Restore the "old" 2-row layout with new labels
                 keyboard = [
-                    [KeyboardButton("🔒 Lock Door"), KeyboardButton("🔇 Off Device")],
+                    [KeyboardButton("🔒 Lock Door"), KeyboardButton("🔌 Off Device")],
                     [KeyboardButton("📹 Start Recording"), KeyboardButton("✅ Dismiss")]
                 ]
                 reply_markup = ReplyKeyboardMarkup(
@@ -135,12 +148,12 @@ class ActionAgent:
                 )
 
                 await self._bot.send_message(
-                    chat_id=TELEGRAM_CHAT_ID,
+                    chat_id=self._chat_id,
                     text=message,
-                    parse_mode="Markdown",
+                    parse_mode="HTML",
                     reply_markup=reply_markup
                 )
-                logger.info(f"[ActionAgent] ✅ Telegram alert sent to {TELEGRAM_CHAT_ID}")
+                logger.info(f"[ActionAgent] ✅ Telegram alert sent to {self._chat_id}")
                 actions.append("telegram_delivered")
             except TelegramError as e:
                 logger.error(f"[ActionAgent] ❌ Telegram send failed: {e}")
@@ -168,17 +181,35 @@ class ActionAgent:
     def _build_alert_message(self, event: dict, reasoning: str, risk: dict) -> str:
         """Format the Telegram alert message."""
         score = risk.get("anomaly_score", 0.0)
-        risk_level = risk.get("risk_level", "Dangerous")
-        emoji = "🚨" if risk_level == "Dangerous" else "⚠️"
-
-        # Simplified message as per user request (reasoning is on dashboard)
+        risk_level_raw = risk.get("risk_level", "Normal")
+        
+        # Map internal risk levels to user-facing labels
+        risk_map = {
+            "Dangerous": "HIGH",
+            "Suspicious": "MEDIUM",
+            "Normal": "LOW"
+        }
+        risk_level = risk_map.get(risk_level_raw, "LOW")
+        
+        source = event.get("source", "Unknown Location").replace("_", " ").title()
+        event_type = event.get("event", "activity").replace("_", " ").title()
+        time = event.get("time", "unknown time")
+        user_status = "Home" if event.get("user_home") else "Away"
+        
+        # Determine recommendation based on event
+        recommendation = "Secure Home"
+        if "motion" in event_type.lower():
+            recommendation = "Record Clip"
+        elif "safe" in risk_level.lower():
+            recommendation = "Maintain Monitoring"
+        
         return (
-            f"{emoji} *CLAWSENTINEL ALERT*\n\n"
-            f"*Risk*: {risk_level} (score: {score:.2f})\n"
-            f"*Event*: `{event.get('event')}`\n"
-            f"*Source*: `{event.get('source')}`\n\n"
-            f"_Select an action below to respond._\n"
-            f"_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}_"
+            f"🚨 <b>ClawSentinel Alert</b>\n\n"
+            f"<b>Risk</b>: {risk_level} ({score:.2f})\n\n"
+            f"📍 {source} {event_type} at {time}  \n"
+            f"👤 <b>User</b>: {user_status}  \n\n"
+            f"🧠 <b>Unusual activity detected</b>\n\n"
+            f"👉 <b>Recommended</b>: {recommendation}"
         )
 
     # ──────────────────────────────────────────
