@@ -165,16 +165,19 @@ async def telegram_webhook(payload: dict, request: Request):
 
             logger.info(f"[Telegram Webhook] Text received: '{text}' from @{user}")
 
-            # Map common text phrases to actions (case-insensitive)
-            normalized_text = text.lower()
+            # Map common text phrases to actions using SentinelOrchestrator logic
+            clean_input = text.lower().strip()
             action = None
-            if "lock" in normalized_text:     action = "lock_door"
-            elif "off" in normalized_text:    action = "off_device"
-            elif "record" in normalized_text: action = "start_recording"
-            elif "dismiss" in normalized_text: action = "dismiss"
+            
+            if any(keyword in clean_input for keyword in ["secure", "lock", "🔒"]):
+                action = "secure"
+            elif any(keyword in clean_input for keyword in ["record", "video", "📹"]):
+                action = "record"
+            elif any(keyword in clean_input for keyword in ["safe", "dismiss", "✅"]):
+                action = "safe"
 
             if action:
-                logger.info(f"[Telegram Webhook] Mapped text '{text}' to action '{action}'")
+                logger.info(f"[Telegram Webhook] Recognized CONFIRMATION for '{action}' from text '{text}'")
                 result = await orchestrator.execute_action(action)
                 return {"status": "ok", "action": action, "user": user}
             else:
