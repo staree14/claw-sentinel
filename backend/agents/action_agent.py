@@ -66,7 +66,7 @@ class ActionAgent:
         else:
             return self._handle_ignore(event)
 
-    async def execute_confirmed_action(self, action_name: str) -> dict:
+    async def execute_confirmed_action(self, action_name: str, send_telegram: bool = True) -> dict:
         """
         Executes a physical action that was previously pending confirmation.
         """
@@ -74,14 +74,13 @@ class ActionAgent:
         
         # Human-friendly mapping for buttons
         action_map = {
-            "secure": "Door Locked",
-            "lock_door": "Door Locked",
-            "record": "Recording Started",
-            "start_recording": "Recording Started",
-            "safe": "Alert Dismissed",
-            "dismiss": "Alert Dismissed",
-            "off_device": "Device Powered Off",
-            "alert_user": "User Alerted (Confirmed via Dashboard)"
+            "lock_door": "Door Locked 🔒",
+            "off_device": "Device Powered Off 🔌",
+            "start_recording": "Recording Started 📹",
+            "dismiss": "Alert Dismissed ✅",
+            "secure": "Door Locked 🔒",
+            "record": "Recording Started 📹",
+            "safe": "Alert Dismissed ✅"
         }
         
         # Normalize: "🔒 Secure" -> "secure", "lock_door" -> "lock_door"
@@ -100,7 +99,7 @@ class ActionAgent:
         )
 
         # Simulate real hardware interaction
-        if self._telegram_ready and self._bot:
+        if send_telegram and self._telegram_ready and self._bot:
             try:
                 logger.info(f"[ActionAgent] Sending Telegram confirmation to {self._chat_id}")
                 await self._bot.send_message(
@@ -112,7 +111,7 @@ class ActionAgent:
             except Exception as e:
                 logger.error(f"Failed to send confirmation to Telegram: {e}")
         else:
-            logger.warning(f"[ActionAgent] Telegram not ready (ready={self._telegram_ready}) — confirmation skipped")
+            logger.info(f"[ActionAgent] Telegram confirmation skipped (send_telegram={send_telegram})")
 
         return {
             "status": "success",
@@ -139,8 +138,8 @@ class ActionAgent:
                 # Use ReplyKeyboardMarkup for "2-way convo" feel
                 # Restore the "old" 2-row layout with new labels
                 keyboard = [
-                    [KeyboardButton("🔒 Secure"), KeyboardButton("📹 Record")],
-                    [KeyboardButton("✅ Safe")]
+                    [KeyboardButton("🔒 Lock Door"), KeyboardButton("🔌 Off Device")],
+                    [KeyboardButton("📹 Start Recording"), KeyboardButton("✅ Dismiss")]
                 ]
                 reply_markup = ReplyKeyboardMarkup(
                     keyboard, 

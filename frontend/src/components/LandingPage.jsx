@@ -1,9 +1,28 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { Shield, Brain, Zap, Bell } from "lucide-react";
 
 export default function LandingPage() {
   const navigate = useNavigate();
+
+  const features = [
+    {
+      icon: <Brain className="w-7 h-7 text-emerald-400" />,
+      title: "Learns Your Routine",
+      desc: "Establishes a behavioral baseline from household activity."
+    },
+    {
+      icon: <Bell className="w-7 h-7 text-cyan-400" />,
+      title: "Intelligent Alerts",
+      desc: "Context-aware anomaly detection with advanced reasoning."
+    },
+    {
+      icon: <Zap className="w-7 h-7 text-blue-400" />,
+      title: "Local & Samsung-Ready",
+      desc: "Low latency, privacy-first, and offline-capable. Built as an intelligence layer for SmartThings integration."
+    }
+  ];
 
   return (
     <motion.div 
@@ -37,25 +56,20 @@ export default function LandingPage() {
         </motion.div>
 
         <motion.div
-          className="mt-16 w-full aspect-video rounded-[2rem] border border-white/10 bg-white/[0.02] backdrop-blur-3xl flex items-center justify-center shadow-2xl relative overflow-hidden group"
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 w-full"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          {/* Subtle grid pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-
-          <div className="relative flex flex-col items-center gap-5">
-            <div className="h-20 w-20 rounded-full bg-white/5 flex items-center justify-center border border-white/10 group-hover:scale-110 group-hover:bg-white/10 transition-all duration-500 shadow-glow">
-              <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5" />
-              </svg>
+          {features.map((feature, idx) => (
+            <div key={idx} className="rounded-2xl border border-white/5 bg-white/[0.02] backdrop-blur-md p-8 flex flex-col items-center text-center hover:bg-white/[0.04] transition-colors group">
+              <div className="h-16 w-16 rounded-full bg-white/5 flex items-center justify-center mb-6 border border-white/10 group-hover:scale-110 transition-transform duration-500">
+                {feature.icon}
+              </div>
+              <h3 className="text-lg font-semibold text-white tracking-wide mb-3">{feature.title}</h3>
+              <p className="text-sm font-light text-slate-400 leading-relaxed">{feature.desc}</p>
             </div>
-            <div className="text-center">
-              <p className="text-sm tracking-[0.25em] uppercase text-slate-300 font-semibold">Interactive 3D Demo</p>
-              <p className="text-sm text-slate-500 mt-2 font-light">Visualizer moved to dashboard</p>
-            </div>
-          </div>
+          ))}
         </motion.div>
 
         <motion.button

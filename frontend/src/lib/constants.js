@@ -54,7 +54,7 @@ export const scenarios = [
       user_home: true,
       motion: true,
       source: "garage_entry",
-      description: "Known owner presence detected with normal evening arrival.",
+      description: "Known owner presence detected; normal evening arrival matching the routine learned by the ML model.",
     },
   },
 ];

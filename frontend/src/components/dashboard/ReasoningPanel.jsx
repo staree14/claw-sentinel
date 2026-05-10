@@ -2,7 +2,6 @@ import React from "react";
 import { CheckCircle2, Loader2, ShieldAlert, Terminal, Zap, WifiOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PanelHeading from "../ui/PanelHeading";
-import ActionButton from "../ui/ActionButton";
 
 // Decision badge colours
 const DECISION_STYLE = {
@@ -17,7 +16,7 @@ export default function ReasoningPanel({ analysis, isThinking, mode, backendOnli
   const escalated = analysis.escalated || false;
 
   return (
-    <aside className="rounded-[2rem] border border-white/5 bg-white/[0.02] backdrop-blur-2xl p-6 xl:p-8 flex flex-col gap-5 overflow-y-auto">
+    <aside className="rounded-[2rem] border border-white/10 bg-white/[0.04] backdrop-blur-2xl p-6 xl:p-8 flex flex-col gap-5 overflow-y-auto">
       <PanelHeading icon={ShieldAlert} title="AI Engine" subtitle={mode} />
 
       {/* Backend status pill */}
@@ -127,23 +126,6 @@ export default function ReasoningPanel({ analysis, isThinking, mode, backendOnli
           </div>
         </div>
       )}
-
-      {/* Recommended Actions */}
-      <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 mt-auto">
-        <h2 className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-4">
-          Recommended Operator Actions
-        </h2>
-        <div className="grid gap-3">
-          {analysis.suggestedActions.map((action) => (
-            <ActionButton 
-              key={action} 
-              action={action} 
-              disabled={isThinking} 
-              onClick={onAction}
-            />
-          ))}
-        </div>
-      </div>
     </aside>
   );
 }
